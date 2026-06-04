@@ -152,14 +152,28 @@ for i in range(MILES):
 C_FARMB = (0,0,0)
 C_RICE = (115, 165, 135)  # Flooded rice paddy color (blend of blue-green)
 
+def split_by_horizontal_strip(x0, y0, x1, y1, s_min, s_max):
+    if y1 <= s_min:
+        return [(x0, y0, x1, y1)]
+    if y0 >= s_max:
+        return [(x0, y0, x1, y1)]
+    parts = []
+    if y0 < s_min:
+        parts.append((x0, y0, x1, s_min))
+    if y1 > s_max:
+        parts.append((x0, s_max, x1, y1))
+    return parts
+
 for (x0, y0, x1, y1) in parcels:
-    cx0 = max(100, x0)
-    cy0 = max(100, y0)
-    cx1 = min(S - 100, x1)
-    cy1 = min(S - 100, y1)
-    if cx1 > cx0 and cy1 > cy0:
-        fill_col = C_RICE if y0 >= m(7) else C_FARM
-        rect(cx0, cy0, cx1, cy1, fill_col, outline=C_FARMB, width=W_FIELD_BORDER)
+    split_parts = split_by_horizontal_strip(x0, y0, x1, y1, 950, 1010)
+    for (sx0, sy0, sx1, sy1) in split_parts:
+        cx0 = max(100, sx0)
+        cy0 = max(100, sy0)
+        cx1 = min(S - 100, sx1)
+        cy1 = min(S - 100, sy1)
+        if cx1 - cx0 > 20 and cy1 - cy0 > 20:
+            fill_col = C_RICE if sy0 >= m(7) else C_FARM
+            rect(cx0, cy0, cx1, cy1, fill_col, outline=C_FARMB, width=W_FIELD_BORDER)
 
 # ================= LAKE (200 hectares irregular lake in the north) =================
 def generate_lake_polygon(cx, cy, target_area):

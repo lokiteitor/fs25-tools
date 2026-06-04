@@ -209,6 +209,9 @@ clips.append((0, S - 100, S, S))
 clips.append((0, 0, 100, S))
 clips.append((S - 100, 0, S, S))
 
+# Railway tracks corridor clip to clear fields from tracks
+clips.append((0, 950, S, 1010))
+
 clips.append((m(1.0), m(1.0), m(1.625), m(1.5))) # Top-west of town
 for f in forests:
     clips.append(f)
@@ -284,8 +287,8 @@ for p in parcels:
         cy0_s = cy0 + margin
         cy1_s = cy1 - margin
         
-        # Avoid invalid geometries for tiny slivers
-        if cx1_s - cx0_s <= 2.0 or cy1_s - cy0_s <= 2.0:
+        # Avoid invalid geometries for tiny slivers (less than 10 meters wide/tall)
+        if cx1_s - cx0_s <= 10.0 or cy1_s - cy0_s <= 10.0:
             continue
             
         ns = [
