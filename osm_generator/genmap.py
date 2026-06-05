@@ -9,6 +9,33 @@ MILES = 8                     # real miles across (PLSS scale)
 PPM = S / MILES               # px per mile = 1024
 def m(x): return x * PPM      # helper for miles
 
+def get_road_x(y):
+    y_miles = y / PPM
+    if y_miles <= 2.2:
+        x_miles = 7.0
+    elif y_miles <= 3.8:
+        u = (y_miles - 2.2) / (3.8 - 2.2)
+        x_miles = 4.0 + 3.0 * (1.0 + math.cos(math.pi * u)) / 2.0
+    elif y_miles <= 4.2:
+        x_miles = 4.0
+    elif y_miles <= 5.8:
+        u = (y_miles - 4.2) / (5.8 - 4.2)
+        x_miles = 1.0 + 3.0 * (1.0 + math.cos(math.pi * u)) / 2.0
+    else:
+        x_miles = 1.0
+    return m(x_miles)
+
+def crosses_diagonal_forest(x0, y0, x1, y1):
+    if y1 <= m(1) or y0 >= m(7):
+        return False
+    y_start = max(y0, m(1))
+    y_end = min(y1, m(7))
+    for y in [y_start, (y_start + y_end)/2, y_end]:
+        rx = get_road_x(y)
+        if x0 - 350 <= rx <= x1 + 350:
+            return True
+    return False
+
 def get_forest_top(x):
     y_c = m(0.35) + (m(0.1) * (x / S)) + 90 * math.sin(x * 2 * math.pi / 3200) + 25 * math.sin(x * 2 * math.pi / 900)
     w = 180 + 30 * math.sin(x * 2 * math.pi / 1000)
@@ -107,8 +134,12 @@ for i in range(MILES):
         
         is_north = (j == 0)
         if is_north:
-            edge = (i == 0 or i == MILES - 1 or j == 0 or j == MILES - 1)
-            split_block(x0, y0, x1, y1, 0, edge, False)
+            x_mid = x0 + 512
+            for r in range(4):
+                y_start = y0 + r * 256
+                y_end = y_start + 256
+                parcels.append((x0, y_start, x_mid, y_end))
+                parcels.append((x_mid, y_start, x1, y_end))
             continue
             
         if i == 1 and j == 1:
@@ -127,19 +158,9 @@ for i in range(MILES):
         is_south = (j == MILES - 1)
         
         if is_south:
-            x_mid = x0 + 512
-            # Generate 2 regular horizontal strips above the canal, split in half
-            for k in range(2):
-                y_start = m(7) + k * 256
-                y_end = y_start + 256
-                parcels.append((x0, y_start, x_mid, y_end))
-                parcels.append((x_mid, y_start, x1, y_end))
-            # Generate 2 regular horizontal strips below the canal, split in half
-            for k in range(2):
-                y_start = m(7.5) + k * 256
-                y_end = y_start + 256
-                parcels.append((x0, y_start, x_mid, y_end))
-                parcels.append((x_mid, y_start, x1, y_end))
+            continue
+            
+        if crosses_diagonal_forest(x0, y0, x1, y1):
             continue
             
         if not (near_town or along_canal):
@@ -172,8 +193,71 @@ for (x0, y0, x1, y1) in parcels:
         cx1 = min(S - 100, sx1)
         cy1 = min(S - 100, sy1)
         if cx1 - cx0 > 20 and cy1 - cy0 > 20:
-            fill_col = C_RICE if sy0 >= m(7) else C_FARM
+            fill_col = C_RICE if (sy0 >= m(7) or sy0 < m(1)) else C_FARM
             rect(cx0, cy0, cx1, cy1, fill_col, outline=C_FARMB, width=W_FIELD_BORDER)
+
+# Southern Zone Fields (West: 5 circular fields + 2 square fields + 2 columns of 2x2 split fields in 2 rows, East: horizontal thin strips split in 2x4)
+y_start = 7208
+y_end = 8008
+x_min = 100
+x_max = 3782
+N_cols_s = 9
+N_rows_s = 2
+R_s = 190
+
+col_width = (x_max - x_min) / N_cols_s
+row_height = (y_end - y_start) / N_rows_s
+
+for r in range(N_rows_s):
+    cy = y_start + row_height / 2 + r * row_height
+    y0 = y_start + r * row_height
+    y1 = y0 + row_height
+    for c in range(N_cols_s):
+        x0 = x_min + c * col_width
+        x1 = x0 + col_width
+        cx = x_min + col_width / 2 + c * col_width
+        if c < 5:
+            d.ellipse([cx - R_s, cy - R_s, cx + R_s, cy + R_s], fill=C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+        elif c in [5, 6]:
+            rect(x0, y0, x1, y1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+        else:
+            # Columns 7 and 8: split into 2x2 grid of smaller squares
+            sub_w = col_width / 2
+            sub_h = row_height / 2
+            for sr in range(2):
+                sy0 = y0 + sr * sub_h
+                sy1 = sy0 + sub_h
+                for sc in range(2):
+                    sx0 = x0 + sc * sub_w
+                    sx1 = sx0 + sub_w
+                    rect(sx0, sy0, sx1, sy1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+
+x_min_h = 4410
+x_max_h = 8092
+N_cols = 2
+N_rows = 4
+width_col = (x_max_h - x_min_h) / N_cols
+height_row = (y_end - y_start) / N_rows
+
+for c in range(N_cols):
+    col_x0 = x_min_h + c * width_col
+    col_x1 = col_x0 + width_col
+    for r in range(N_rows):
+        row_y0 = y_start + r * height_row
+        row_y1 = row_y0 + height_row
+        rect(col_x0, row_y0, col_x1, row_y1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+
+# Southeast circular fields
+for col, row in [(3, 5), (4, 5), (5, 5), (6, 5)]:
+    cx = col * 1024 + 512
+    cy = row * 1024 + 512
+    R = 472
+    d.ellipse([cx - R, cy - R, cx + R, cy + R], fill=C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+
+
+
+
+
 
 # ================= LAKE (200 hectares irregular lake in the north) =================
 def generate_lake_polygon(cx, cy, target_area):
@@ -209,6 +293,24 @@ def generate_lake_polygon(cx, cy, target_area):
     return final_points
 
 lake_pts = generate_lake_polygon(5000, 500, 800000)
+
+def generate_road_loop(lake_points, cx, cy, bx=120, by=60):
+    road_points = []
+    for (x, y) in lake_points:
+        dx = x - cx
+        dy = y - cy
+        dist = math.sqrt(dx*dx + dy*dy)
+        if dist == 0:
+            rx, ry = cx, cy
+        else:
+            rx = cx + dx + (dx / dist) * bx
+            ry = cy + dy + (dy / dist) * by
+        road_points.append((rx, ry))
+    return road_points
+
+road_loop_pts = generate_road_loop(lake_pts, 5000, 500, 120, 60)
+road_loop_pts[69] = (4384, 800)
+
 # Draw enclosing rectangular farmyard
 rect(3850, 120, 6150, 965, C_YARD, outline=C_YARDB, width=5)
 
@@ -271,6 +373,27 @@ off = TH_T/2 + CW/2 + GAP
 
 
 
+# get_road_x defined at the top of the file
+
+def get_diag_spot(y_c, side):
+    x_c = get_road_x(y_c)
+    w = m(0.125)
+    h = m(0.125)
+    if side == 'northeast':
+        x0 = x_c + TH_P/2
+        x1 = x0 + w
+    else:
+        x1 = x_c - TH_P/2
+        x0 = x1 - w
+    y0 = y_c - h/2
+    y1 = y_c + h/2
+    return (x0, y0, x1, y1)
+
+road_pts = []
+for y_px in range(int(m(1)), int(m(7)) + 1, 4):
+    road_pts.append((get_road_x(y_px), y_px))
+road_pts.append((m(1), m(7)))
+
 # ================= ROAD WIDTHS AND HELPERS =================
 # TH_P, TH_S, TH_T defined at the top of the file
 
@@ -301,9 +424,19 @@ for k, y in enumerate(hlines):
 
 for k, x in enumerate(vlines):
     if k == 0 or k == MILES: continue
-    elif k in [1, 7]: vline_outline(x, TH_P)
     elif k in sec_v: vline_outline(x, TH_S)
     else: vline_outline(x, TH_T)
+
+# Draw diagonal primary road outline
+d.line(road_pts, fill=C_FARMB, width=TH_P + 2*W_ROAD_BORDER, joint="round")
+
+# Draw new track road outline connecting city farmyard to lake farmyard
+d.line([(2048, 1024), (2048, 800), (4384, 800)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+# Draw road loop outline around the lake
+d.line(road_loop_pts + [road_loop_pts[0]], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+# Draw southern track road outlines
+d.line([(4096, 7168), (4096, 8040)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+d.line([(100, 8040), (8092, 8040)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
 
 
 # ================= TOWN (1x1 mile Section, rectangular hugging the north-west) =================
@@ -330,12 +463,29 @@ for i in range(1, 4):
 
 # ================= FORESTS (3 large rectangles, occupying half a section pegged to roads) =================
 # C_FOREST fill
-# Forest 1: Northern half of section [5, 6] x [2, 3], pegged to y=2
-rect(m(5.0), m(2.0), m(6.0), m(2.5), C_FOREST)
 # Forest 2: Western half of section [2, 3] x [1, 2], pegged to x=2 (next to town farmyard)
-rect(m(2.0), m(1.0), m(2.5), m(2.0), C_FOREST)
-# Forest 3: Southern half of section [5, 6] x [5, 6], pegged to y=6
-rect(m(5.0), m(5.5), m(6.0), m(6.0), C_FOREST)
+rect(m(2.0), m(1.0), m(2.25), m(2.0), C_FOREST)
+
+# New forest surrounding diagonal road with 50m (32px) black margin and curved boundaries
+margin_pts = []
+forest_pts = []
+for y_px in range(int(m(1)), int(m(7)) + 1, 4):
+    xc = get_road_x(y_px)
+    margin_pts.append((min(S - 100.0, xc + 350.0), y_px))
+    forest_pts.append((min(S - 100.0, xc + 318.0), y_px))
+
+for y_px in range(int(m(7)), int(m(1)) - 1, -4):
+    xc = get_road_x(y_px)
+    margin_pts.append((max(100.0, xc - 350.0), y_px))
+    forest_pts.append((max(100.0, xc - 318.0), y_px))
+
+# Draw black margin first
+d.polygon(margin_pts, fill=C_FARMB)
+# Draw forest on top
+d.polygon(forest_pts, fill=C_FOREST)
+
+# Southern forest surrounding the farmyard, reaching both edges (north to south)
+rect(3782, 7168, 4410, 8092, C_FOREST)
 
 # ================= FARMYARDS (5 purple squares/rectangles on primary roads) =================
 # C_YARD fill, C_YARDB outline
@@ -348,19 +498,49 @@ yards = [
     (m(4.4), m(7) - TH_P/2 - m(0.2), m(4.6), m(7) - TH_P/2),                           # Yard 3: Square (0.2x0.2 mi), centered along y=7, block x ∈ [4, 5]
     (m(6.35), m(7) - TH_P/2 - m(0.3), m(6.65), m(7) - TH_P/2),                         # Yard 4: Square (0.3x0.3 mi), centered along y=7, block x ∈ [6, 7]
     (m(1) + TH_P/2, m(4.4), m(1) + TH_P/2 + m(0.2), m(4.6)),                           # Yard 5: Square (0.2x0.2 mi), centered along x=1, block y ∈ [4, 5]
-    (m(7) - TH_P/2 - m(0.5), m(4.25), m(7) - TH_P/2, m(4.75))                            # New Yard: Square (0.5x0.5 mi), centered along x=7 (East primary road), block y ∈ [4, 5]
+    (m(7) - TH_P/2 - m(0.5), m(4.25), m(7) - TH_P/2, m(4.75)),                           # New Yard: Square (0.5x0.5 mi), centered along x=7 (East primary road), block y ∈ [4, 5]
+    (3846, 7380, 4346, 7880)                                                           # Southern Yard: 500x500px in the middle of southern zone
 ]
 
 for (x0, y0, x1, y1) in yards:
     rect(x0, y0, x1, y1, C_YARD, outline=C_YARDB, width=5)
 
-# ================= INDUSTRIAL (2 grey rectangles, along primary roads on the other side) =================
+# ================= INDUSTRIAL (21 grey rectangles: 1 north of town, 20 along primary roads) =================
 # Coordinates remove the 5px offset to touch the road fills directly.
 ind_spots = [
-    (m(1) - TH_P/2 - m(0.4), m(6.2), m(1) - TH_P/2, m(6.8)),                           # Spot 1: 0.4 x 0.6 miles (west of x=1, southwest, block y ∈ [6, 7])
-    (m(5.2), m(7.0) - TH_P/2 - m(0.4), m(5.8), m(7.0) - TH_P/2),                       # Spot 2: 0.6 x 0.4 miles (north of y=7, southeast, block x ∈ [5, 6])
     (m(1) + TH_P/2, 750, m(2) - TH_T/2, 950),                                          # Spot 3: 1000m x 200m thin strip (north of town, block x ∈ [1, 2], y ∈ [750, 950])
+    
+    # 20 industrial zones (4 hectares each, ~0.125 x 0.125 miles)
+    # Road 1: Horizontal y=1, south side (5 zones placed in field corners)
+    (m(3) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(3) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    (m(3) + TH_T/2, m(1) + TH_P/2, m(3) + TH_T/2 + m(0.125), m(1) + TH_P/2 + m(0.125)),
+    (m(4) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(4) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    (m(5) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(5) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    (m(6) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(6) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    
+    # Road 2: Horizontal y=7, north side (5 zones placed in field corners)
+    (m(1) - TH_P/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(1) - TH_P/2, m(7) - TH_P/2),
+    (m(1) + TH_P/2, m(7) - TH_P/2 - m(0.125), m(1) + TH_P/2 + m(0.125), m(7) - TH_P/2),
+    (m(2) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(2) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(4) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(4) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(6) - TH_T/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(6) - TH_T/2, m(7) - TH_P/2),
 ]
+
+diag_y_coords = [
+    (m(1.2), 'northeast'),
+    (m(1.5), 'southwest'),
+    (m(1.8), 'northeast'),
+    (m(2.1), 'southwest'),
+    (m(3.9), 'northeast'),
+    (m(4.1), 'southwest'),
+    (m(5.9), 'northeast'),
+    (m(6.2), 'southwest'),
+    (m(6.5), 'northeast'),
+    (m(6.8), 'southwest')
+]
+
+for y_c, side in diag_y_coords:
+    ind_spots.append(get_diag_spot(y_c, side))
 
 for (x0, y0, x1, y1) in ind_spots:
     rect(x0, y0, x1, y1, C_IND, outline=C_FARMB, width=3)
@@ -375,9 +555,19 @@ for k, y in enumerate(hlines):
 
 for k, x in enumerate(vlines):
     if k == 0 or k == MILES: continue
-    elif k in [1, 7]: vline_fill(x, TH_P, C_ROADP)
     elif k in sec_v: vline_fill(x, TH_S, C_ROADS)
     else: vline_fill(x, TH_T, C_ROADT)
+
+# Draw diagonal primary road fill
+d.line(road_pts, fill=C_ROADP, width=TH_P, joint="round")
+
+# Draw new track road fill connecting city farmyard to lake farmyard
+d.line([(2048, 1024), (2048, 800), (4384, 800)], fill=C_ROADT, width=TH_T, joint="round")
+# Draw road loop fill around the lake
+d.line(road_loop_pts + [road_loop_pts[0]], fill=C_ROADT, width=TH_T, joint="round")
+# Draw southern track road fills
+d.line([(4096, 7168), (4096, 8040)], fill=C_ROADT, width=TH_T, joint="round")
+d.line([(100, 8040), (8092, 8040)], fill=C_ROADT, width=TH_T, joint="round")
 
 
 # Paint the 100m border solid black (unassigned area)

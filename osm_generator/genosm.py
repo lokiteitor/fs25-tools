@@ -12,6 +12,35 @@ MILES = 8                     # real miles across
 PPM = S / MILES               # px per mile = 1024
 def m(x): return x * PPM      # helper for miles
 
+def get_road_x(y):
+    y_miles = y / PPM
+    if y_miles <= 2.2:
+        x_miles = 7.0
+    elif y_miles <= 3.8:
+        u = (y_miles - 2.2) / (3.8 - 2.2)
+        x_miles = 4.0 + 3.0 * (1.0 + math.cos(math.pi * u)) / 2.0
+    elif y_miles <= 4.2:
+        x_miles = 4.0
+    elif y_miles <= 5.8:
+        u = (y_miles - 4.2) / (5.8 - 4.2)
+        x_miles = 1.0 + 3.0 * (1.0 + math.cos(math.pi * u)) / 2.0
+    else:
+        x_miles = 1.0
+    return m(x_miles)
+
+def crosses_diagonal_forest(x0, y0, x1, y1):
+    if y1 <= m(1) or y0 >= m(7):
+        return False
+    y_start = max(y0, m(1))
+    y_end = min(y1, m(7))
+    for y in [y_start, (y_start + y_end)/2, y_end]:
+        rx = get_road_x(y)
+        if x0 - 350 <= rx <= x1 + 350:
+            return True
+    return False
+
+
+
 def get_forest_top(x):
     y_c = m(0.35) + (m(0.1) * (x / S)) + 90 * math.sin(x * 2 * math.pi / 3200) + 25 * math.sin(x * 2 * math.pi / 900)
     w = 180 + 30 * math.sin(x * 2 * math.pi / 1000)
@@ -48,6 +77,54 @@ W_CANAL_BORDER = 12           # Black border/margin for canals
 CW = 26                       # Canal width
 off = TH_T/2 + CW/2 + GAP
 
+
+def generate_lake_polygon(cx, cy, target_area):
+    n_points = 200
+    points = []
+    a_base = 2.8
+    b_base = 1.0
+    for i in range(n_points):
+        theta = i * 2 * math.pi / n_points
+        # Irregular noise using multiple sine/cosine waves
+        r_noise = 1.0 + 0.18 * math.sin(4 * theta) + 0.08 * math.cos(7 * theta) + 0.04 * math.sin(12 * theta)
+        x = a_base * r_noise * math.cos(theta)
+        y = b_base * r_noise * math.sin(theta)
+        points.append((x, y))
+        
+    # Calculate base area with Shoelace formula
+    current_area = 0.0
+    for i in range(n_points):
+        x1, y1 = points[i]
+        x2, y2 = points[(i + 1) % n_points]
+        current_area += (x1 * y2 - x2 * y1)
+    current_area = abs(current_area) / 2.0
+    
+    scale = math.sqrt(target_area / current_area)
+    
+    final_points = []
+    for (x, y) in points:
+        fx = cx + x * scale
+        fy = cy + y * scale
+        final_points.append((fx, fy))
+    return final_points
+
+def generate_road_loop(lake_points, cx, cy, bx=120, by=60):
+    road_points = []
+    for (x, y) in lake_points:
+        dx = x - cx
+        dy = y - cy
+        dist = math.sqrt(dx*dx + dy*dy)
+        if dist == 0:
+            rx, ry = cx, cy
+        else:
+            rx = cx + dx + (dx / dist) * bx
+            ry = cy + dy + (dy / dist) * by
+        road_points.append((rx, ry))
+    return road_points
+
+lake_pts = generate_lake_polygon(5000, 500, 800000)
+road_loop_pts = generate_road_loop(lake_pts, 5000, 500, 120, 60)
+road_loop_pts[69] = (4384, 800)
 
 # --- Georeferencing ---
 # Center: (27.07991, -109.70707)
@@ -133,8 +210,12 @@ for i in range(MILES):
         
         is_north = (j == 0)
         if is_north:
-            edge = (i == 0 or i == MILES - 1 or j == 0 or j == MILES - 1)
-            split_block(x0, y0, x1, y1, 0, edge, False)
+            x_mid = x0 + 512
+            for r in range(4):
+                y_start = y0 + r * 256
+                y_end = y_start + 256
+                parcels.append((x0, y_start, x_mid, y_end))
+                parcels.append((x_mid, y_start, x1, y_end))
             continue
             
         if i == 1 and j == 1:
@@ -151,21 +232,13 @@ for i in range(MILES):
         near_town = (abs(i - 1.5) <= 1.5 and abs(j - 1.5) <= 1.5 and j > 0)
         along_canal = (i == 2 and (1 <= j <= 6)) or (j == 2 and (1 <= i <= 6))
         is_south = (j == MILES - 1)
+        is_southeast_circle = (i in [3, 4, 5, 6] and j == 5)
         
-        if is_south:
-            x_mid = x0 + 512
-            # Generate 2 regular horizontal strips above the canal, split in half
-            for k in range(2):
-                y_start = m(7) + k * 256
-                y_end = y_start + 256
-                parcels.append((x0, y_start, x_mid, y_end))
-                parcels.append((x_mid, y_start, x1, y_end))
-            # Generate 2 regular horizontal strips below the canal, split in half
-            for k in range(2):
-                y_start = m(7.5) + k * 256
-                y_end = y_start + 256
-                parcels.append((x0, y_start, x_mid, y_end))
-                parcels.append((x_mid, y_start, x1, y_end))
+        if is_south or is_southeast_circle:
+            continue
+            
+        if crosses_diagonal_forest(x0, y0, x1, y1):
+            parcels.append((x0, y0, x1, y1))
             continue
             
         if not (near_town or along_canal):
@@ -179,10 +252,11 @@ for i in range(MILES):
 TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1 = m(1), m(2), m(1), m(2)
 
 forests = [
-    (m(5.0), m(2.0), m(6.0), m(2.5)),
-    (m(2.0), m(1.0), m(2.5), m(2.0)),
-    (m(5.0), m(5.5), m(6.0), m(6.0))
+    (m(2.0), m(1.0), m(2.25), m(2.0)),
+    (3782, 7168, 4410, 8092) # Southern forest surrounding the farmyard, reaching both edges
 ]
+
+diag_forests = []
 
 yards = [
     (m(4.375), m(1) + TH_P/2, m(4.625), m(1) + TH_P/2 + m(0.25)),
@@ -192,14 +266,83 @@ yards = [
     (m(1) + TH_P/2, m(4.4), m(1) + TH_P/2 + m(0.2), m(4.6)),
     (m(1.625), m(1.0), m(2.0), m(1.5)),
     (m(7) - TH_P/2 - m(0.5), m(4.25), m(7) - TH_P/2, m(4.75)),
-    (3850, 120, 6150, 965) # Lake enclosing farmyard (surrounds the northern lake)
+    (3850, 120, 6150, 965), # Lake enclosing farmyard (surrounds the northern lake)
+    (3846, 7380, 4346, 7880) # Southern Yard: 500x500px in the middle of southern zone
 ]
 
+# get_road_x defined at the top of the file
+
+num_forest_steps = 240
+for i in range(num_forest_steps):
+    y0 = m(1.0 + i * (6.0 / num_forest_steps))
+    y1 = m(1.0 + (i + 1) * (6.0 / num_forest_steps))
+    ym = (y0 + y1) / 2
+    xc = get_road_x(ym)
+    x0 = max(100.0, xc - 350.0)
+    x1 = min(S - 100.0, xc + 350.0)
+    diag_forests.append((x0, y0, x1, y1))
+
+def find_intersection_y(target_x):
+    low = m(1)
+    high = m(7)
+    for _ in range(20):
+        mid = (low + high) / 2
+        x = get_road_x(mid)
+        if x > target_x:
+            low = mid
+        else:
+            high = mid
+    return mid
+
+def get_diag_spot(y_c, side):
+    x_c = get_road_x(y_c)
+    w = m(0.125)
+    h = m(0.125)
+    if side == 'northeast':
+        x0 = x_c + TH_P/2
+        x1 = x0 + w
+    else:
+        x1 = x_c - TH_P/2
+        x0 = x1 - w
+    y0 = y_c - h/2
+    y1 = y_c + h/2
+    return (x0, y0, x1, y1)
+
 ind_spots = [
-    (m(1) - TH_P/2 - m(0.4), m(6.2), m(1) - TH_P/2, m(6.8)),
-    (m(5.2), m(7.0) - TH_P/2 - m(0.4), m(5.8), m(7.0) - TH_P/2),
-    (m(1) + TH_P/2, 750, m(2) - TH_T/2, 950)
+    (m(1) + TH_P/2, 750, m(2) - TH_T/2, 950),
+    
+    # 20 industrial zones (4 hectares each, ~0.125 x 0.125 miles)
+    # Road 1: Horizontal y=1, south side (5 zones placed in field corners)
+    (m(3) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(3) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    (m(3) + TH_T/2, m(1) + TH_P/2, m(3) + TH_T/2 + m(0.125), m(1) + TH_P/2 + m(0.125)),
+    (m(4) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(4) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    (m(5) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(5) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    (m(6) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(6) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
+    
+    # Road 2: Horizontal y=7, north side (5 zones placed in field corners)
+    (m(1) - TH_P/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(1) - TH_P/2, m(7) - TH_P/2),
+    (m(1) + TH_P/2, m(7) - TH_P/2 - m(0.125), m(1) + TH_P/2 + m(0.125), m(7) - TH_P/2),
+    (m(2) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(2) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(4) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(4) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(6) - TH_T/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(6) - TH_T/2, m(7) - TH_P/2),
 ]
+
+diag_y_coords = [
+    (m(1.2), 'northeast'),
+    (m(1.5), 'southwest'),
+    (m(1.8), 'northeast'),
+    (m(2.1), 'southwest'),
+    (m(3.9), 'northeast'),
+    (m(4.1), 'southwest'),
+    (m(5.9), 'northeast'),
+    (m(6.2), 'southwest'),
+    (m(6.5), 'northeast'),
+    (m(6.8), 'southwest')
+]
+
+diag_ind_spots = []
+for y_c, side in diag_y_coords:
+    diag_ind_spots.append(get_diag_spot(y_c, side))
 
 # --- Farmland Clipping Geometry ---
 clips = []
@@ -215,6 +358,7 @@ clips.append((0, 950, S, 1010))
 clips.append((m(1.0), m(1.0), m(1.625), m(1.5))) # Top-west of town
 for f in forests:
     clips.append(f)
+# diag_forests handled directly with curve clipping
 for y in yards:
     clips.append(y)
 for ind in ind_spots:
@@ -228,10 +372,19 @@ for k in range(1, MILES):
 
 for k in range(1, MILES):
     x = m(k)
-    hw = TH_P/2 + W_ROAD_BORDER if k in [1, 7] else TH_T/2 + W_ROAD_BORDER
-    # Vertical track roads (k not in [1, 7]) start at y=m(1). Primary roads start at m(1)-W_ROAD_BORDER.
-    y_start = m(1) if k not in [1, 7] else m(1) - W_ROAD_BORDER
+    hw = TH_T/2 + W_ROAD_BORDER
+    y_start = m(1)
     clips.append((x - hw, y_start, x + hw, m(7) + W_ROAD_BORDER))
+
+# Diagonal primary road is entirely inside the diagonal forest buffer, so we don't clip farmlands against it.
+
+# Add new track road footprint to clips (connects city farmyard to lake farmyard)
+hw_track = TH_T/2 + W_ROAD_BORDER
+clips.append((2048 - hw_track, 800 - hw_track, 2048 + hw_track, 1024 + hw_track))
+clips.append((2048 - hw_track, 800 - hw_track, 4384 + hw_track, 800 + hw_track))
+# Add southern track footprints to clips
+clips.append((4096 - hw_track, 7168 - hw_track, 4096 + hw_track, 8040 + hw_track))
+clips.append((100, 8040 - hw_track, 8092, 8040 + hw_track))
 
 
 
@@ -291,17 +444,203 @@ for p in parcels:
         if cx1_s - cx0_s <= 10.0 or cy1_s - cy0_s <= 10.0:
             continue
             
+        in_forest_range = (cy0_s < m(7)) and (cy1_s > m(1))
+        if not in_forest_range:
+            ns = [
+                create_unique_node(cx0_s, cy0_s),
+                create_unique_node(cx1_s, cy0_s),
+                create_unique_node(cx1_s, cy1_s),
+                create_unique_node(cx0_s, cy1_s),
+            ]
+            ns.append(ns[0])
+            if cy0 >= m(7) or cy0 < m(1):
+                add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
+            else:
+                add_way(ns, {'landuse': 'farmland'})
+            continue
+            
+        # Clip the shrunk rectangle with the diagonal forest (350px margin from road center)
+        # Sample every 16px along the y range to get a smooth curve
+        y_vals = []
+        y_curr = cy0_s
+        while y_curr < cy1_s:
+            y_vals.append(y_curr)
+            y_curr += 16
+        y_vals.append(cy1_s)
+        
+        has_left = False
+        has_right = False
+        for y_val in y_vals:
+            L_y = get_road_x(y_val) - 350.0
+            R_y = get_road_x(y_val) + 350.0
+            if cx0_s < L_y:
+                has_left = True
+            if cx1_s > R_y:
+                has_right = True
+                
+        # Generate left polygon nodes
+        if has_left:
+            pts = [(cx0_s, cy0_s), (cx0_s, cy1_s)]
+            for y_val in reversed(y_vals):
+                L_y = get_road_x(y_val) - 350.0
+                px = max(cx0_s, min(cx1_s, L_y))
+                if pts[-1] != (px, y_val):
+                    pts.append((px, y_val))
+            if pts[-1] != pts[0]:
+                pts.append(pts[0])
+                
+            if len(pts) >= 4:
+                xs = [pt[0] for pt in pts]
+                ys = [pt[1] for pt in pts]
+                if (max(xs) - min(xs) > 10.0) and (max(ys) - min(ys) > 10.0):
+                    ns = [create_unique_node(x, y) for (x, y) in pts]
+                    if cy0 >= m(7) or cy0 < m(1):
+                        add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
+                    else:
+                        add_way(ns, {'landuse': 'farmland'})
+                        
+        # Generate right polygon nodes
+        if has_right:
+            pts = [(cx1_s, cy0_s)]
+            for y_val in y_vals:
+                R_y = get_road_x(y_val) + 350.0
+                px = max(cx0_s, min(cx1_s, R_y))
+                if pts[-1] != (px, y_val):
+                    pts.append((px, y_val))
+            if pts[-1] != (cx1_s, cy1_s):
+                pts.append((cx1_s, cy1_s))
+            if pts[-1] != pts[0]:
+                pts.append(pts[0])
+                
+            if len(pts) >= 4:
+                xs = [pt[0] for pt in pts]
+                ys = [pt[1] for pt in pts]
+                if (max(xs) - min(xs) > 10.0) and (max(ys) - min(ys) > 10.0):
+                    ns = [create_unique_node(x, y) for (x, y) in pts]
+                    if cy0 >= m(7) or cy0 < m(1):
+                        add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
+                    else:
+                        add_way(ns, {'landuse': 'farmland'})
+
+# ================= Southern Zone Fields in OSM =================
+# West: 5 circular fields + 2 square fields + 2 columns of 2x2 split fields in 2 rows, East: horizontal thin strips split in 2x4
+y_start = 7208
+y_end = 8008
+x_min = 100
+x_max = 3782
+N_cols_s = 9
+N_rows_s = 2
+R_s = 190
+margin = 6
+
+col_width = (x_max - x_min) / N_cols_s
+row_height = (y_end - y_start) / N_rows_s
+
+for r in range(N_rows_s):
+    cy = y_start + row_height / 2 + r * row_height
+    y0 = y_start + r * row_height
+    y1 = y0 + row_height
+    for c in range(N_cols_s):
+        x0 = x_min + c * col_width
+        x1 = x0 + col_width
+        cx = x_min + col_width / 2 + c * col_width
+        
+        if c < 5:
+            # Circle approximation
+            pts = []
+            for k in range(32):
+                theta = k * 2 * math.pi / 32
+                x = cx + R_s * math.cos(theta)
+                y = cy + R_s * math.sin(theta)
+                pts.append((x, y))
+            pts.append(pts[0])
+            ns = [create_unique_node(x, y) for (x, y) in pts]
+            add_way(ns, {'landuse': 'farmland'})
+        elif c in [5, 6]:
+            # Rectangle (square farmland)
+            cx0_s = x0 + margin
+            cx1_s = x1 - margin
+            cy0_s = y0 + margin
+            cy1_s = y1 - margin
+            
+            ns = [
+                create_unique_node(cx0_s, cy0_s),
+                create_unique_node(cx1_s, cy0_s),
+                create_unique_node(cx1_s, cy1_s),
+                create_unique_node(cx0_s, cy1_s),
+            ]
+            ns.append(ns[0])
+            add_way(ns, {'landuse': 'farmland'})
+        else:
+            # Columns 7 and 8: split into 2x2 grid of smaller squares
+            sub_w = col_width / 2
+            sub_h = row_height / 2
+            for sr in range(2):
+                sy0 = y0 + sr * sub_h
+                sy1 = sy0 + sub_h
+                for sc in range(2):
+                    sx0 = x0 + sc * sub_w
+                    sx1 = sx0 + sub_w
+                    
+                    cx0_s = sx0 + margin
+                    cx1_s = sx1 - margin
+                    cy0_s = sy0 + margin
+                    cy1_s = sy1 - margin
+                    
+                    ns = [
+                        create_unique_node(cx0_s, cy0_s),
+                        create_unique_node(cx1_s, cy0_s),
+                        create_unique_node(cx1_s, cy1_s),
+                        create_unique_node(cx0_s, cy1_s),
+                    ]
+                    ns.append(ns[0])
+                    add_way(ns, {'landuse': 'farmland'})
+
+x_min_h = 4410
+x_max_h = 8092
+N_cols = 2
+N_rows = 4
+width_col = (x_max_h - x_min_h) / N_cols
+height_row = (y_end - y_start) / N_rows
+
+for c in range(N_cols):
+    col_x0 = x_min_h + c * width_col
+    col_x1 = col_x0 + width_col
+    for r in range(N_rows):
+        row_y0 = y_start + r * height_row
+        row_y1 = row_y0 + height_row
+        
+        cx0_s = col_x0 + margin
+        cx1_s = col_x1 - margin
+        cy0_s = row_y0 + margin
+        cy1_s = row_y1 - margin
+        
         ns = [
             create_unique_node(cx0_s, cy0_s),
             create_unique_node(cx1_s, cy0_s),
             create_unique_node(cx1_s, cy1_s),
             create_unique_node(cx0_s, cy1_s),
         ]
-        ns.append(ns[0])  # Close polygon
-        if cy0 >= m(7):
-            add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
-        else:
-            add_way(ns, {'landuse': 'farmland'})
+        ns.append(ns[0])
+        add_way(ns, {'landuse': 'farmland'})
+
+# ================= Southeast Circular Fields in OSM =================
+for col, row in [(3, 5), (4, 5), (5, 5), (6, 5)]:
+    cx = col * 1024 + 512
+    cy = row * 1024 + 512
+    R = 472
+    pts = []
+    # Generate circle approximation (32 nodes)
+    for k in range(32):
+        theta = k * 2 * math.pi / 32
+        x = cx + R * math.cos(theta)
+        y = cy + R * math.sin(theta)
+        pts.append((x, y))
+    pts.append(pts[0])
+    ns = [create_unique_node(x, y) for (x, y) in pts]
+    add_way(ns, {'landuse': 'farmland'})
+
+
 
 # ================= 2. TOWN =================
 
@@ -342,40 +681,27 @@ for (x0, y0, x1, y1) in forests:
     ns.append(ns[0])
     add_way(ns, {'landuse': 'forest'})
 
-# ================= LAKE (200 hectares irregular lake in the north) =================
-def generate_lake_polygon(cx, cy, target_area):
-    n_points = 200
-    points = []
-    # Base ellipse with a:b ratio of 2.8:1 to fit horizontally in the north
-    a_base = 2.8
-    b_base = 1.0
-    for i in range(n_points):
-        theta = i * 2 * math.pi / n_points
-        # Irregular noise using multiple sine/cosine waves
-        r_noise = 1.0 + 0.18 * math.sin(4 * theta) + 0.08 * math.cos(7 * theta) + 0.04 * math.sin(12 * theta)
-        x = a_base * r_noise * math.cos(theta)
-        y = b_base * r_noise * math.sin(theta)
-        points.append((x, y))
-        
-    # Calculate base area with Shoelace formula
-    current_area = 0.0
-    for i in range(n_points):
-        x1, y1 = points[i]
-        x2, y2 = points[(i + 1) % n_points]
-        current_area += (x1 * y2 - x2 * y1)
-    current_area = abs(current_area) / 2.0
-    
-    scale = math.sqrt(target_area / current_area)
-    
-    # Scale and translate to center
-    final_points = []
-    for (x, y) in points:
-        fx = cx + x * scale
-        fy = cy + y * scale
-        final_points.append((fx, fy))
-    return final_points
+# Single curved forest polygon for OSM (1 km wide = 318px half-width)
+forest_nodes = []
+# Right side: from top to bottom (y = m(1) to m(7))
+for y_px in range(int(m(1)), int(m(7)) + 1, 32):
+    xc = get_road_x(y_px)
+    xr = min(S - 100.0, xc + 318.0)
+    forest_nodes.append(create_unique_node(xr, y_px))
 
-lake_pts = generate_lake_polygon(5000, 500, 800000)
+# Left side: from bottom to top (y = m(7) to m(1))
+for y_px in range(int(m(7)), int(m(1)) - 1, -32):
+    xc = get_road_x(y_px)
+    xl = max(100.0, xc - 318.0)
+    forest_nodes.append(create_unique_node(xl, y_px))
+
+# Close the polygon
+forest_nodes.append(forest_nodes[0])
+
+# Add the forest way
+add_way(forest_nodes, {'natural': 'wood', 'name': 'Bosque de la Diagonal'})
+
+# ================= LAKE (200 hectares irregular lake in the north) =================
 lake_nodes = [create_unique_node(x, y) for (x, y) in lake_pts]
 lake_nodes.append(lake_nodes[0]) # Close polygon
 add_way(lake_nodes, {'natural': 'water', 'water': 'lake', 'name': 'Lago del Norte'})
@@ -402,7 +728,7 @@ for (x0, y0, x1, y1) in yards:
 
 # ================= 5. INDUSTRIAL SPOTS =================
 
-for (x0, y0, x1, y1) in ind_spots:
+for (x0, y0, x1, y1) in ind_spots + diag_ind_spots:
     ns = [
         create_unique_node(x0, y0),
         create_unique_node(x1, y0),
@@ -421,15 +747,69 @@ for (x0, y0, x1, y1) in ind_spots:
 for k in range(1, MILES):
     y = m(k)
     highway_tag = 'primary' if (k == 1 or k == 7) else 'track'
-    ns = [get_node(m(i), y) for i in range(MILES+1)]
+    # Start with grid nodes
+    coords = [m(i) for i in range(MILES+1)]
+    # Insert diagonal road intersection
+    x_int = get_road_x(y)
+    coords.append(x_int)
+    coords.sort()
+    ns = [get_node(x, y) for x in coords]
     add_way(ns, {'highway': highway_tag})
 
 # Vertical roads
 for k in range(1, MILES):
     x = m(k)
-    highway_tag = 'primary' if k in [1, 7] else 'track'
-    ns = [get_node(x, m(j)) for j in range(1, 8)]
+    highway_tag = 'track'
+    y_coords = [m(j) for j in range(1, 8)]
+    # Find diagonal road intersection
+    y_int = find_intersection_y(x)
+    y_coords.append(y_int)
+    y_coords.sort()
+    ns = [get_node(x, y) for y in y_coords]
     add_way(ns, {'highway': highway_tag})
+
+# Diagonal primary road
+diag_pts = []
+for k in range(49):
+    y_val = m(1) + k * 128
+    x_val = get_road_x(y_val)
+    diag_pts.append((x_val, y_val))
+
+for k in range(1, MILES):
+    x_int = m(k)
+    y_int = find_intersection_y(x_int)
+    diag_pts.append((x_int, y_int))
+
+# Sort points by y coordinate
+diag_pts = sorted(list(set(diag_pts)), key=lambda p: p[1])
+diag_nodes = [get_node(x, y) for (x, y) in diag_pts]
+add_way(diag_nodes, {'highway': 'primary'})
+
+# New track road connecting city farmyard to lake farmyard
+track_nodes = [
+    get_node(2048, 1024),
+    get_node(2048, 800),
+    get_node(4384, 800)
+]
+add_way(track_nodes, {'highway': 'track', 'name': 'Camino de Terracería del Lago'})
+
+# Road loop surrounding the lake
+loop_nodes = [get_node(x, y) for (x, y) in road_loop_pts]
+loop_nodes.append(loop_nodes[0]) # Close the loop
+add_way(loop_nodes, {'highway': 'track', 'name': 'Camino del Lago'})
+
+# Southern track roads
+south_vertical_track = [
+    get_node(4096, 7168),
+    get_node(4096, 8040)
+]
+add_way(south_vertical_track, {'highway': 'track', 'name': 'Camino de Terracería del Sur'})
+
+south_horizontal_track = [
+    get_node(100, 8040),
+    get_node(8092, 8040)
+]
+add_way(south_horizontal_track, {'highway': 'track', 'name': 'Camino de Terracería Costero'})
 
 
 
