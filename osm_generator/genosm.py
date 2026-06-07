@@ -309,9 +309,6 @@ def get_diag_spot(y_c, side):
     return (x0, y0, x1, y1)
 
 ind_spots = [
-    (m(1) + TH_P/2, 750, m(2) - TH_T/2, 950),
-    
-    # 20 industrial zones (4 hectares each, ~0.125 x 0.125 miles)
     # Road 1: Horizontal y=1, south side (5 zones placed in field corners)
     (m(3) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(3) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
     (m(3) + TH_T/2, m(1) + TH_P/2, m(3) + TH_T/2 + m(0.125), m(1) + TH_P/2 + m(0.125)),
@@ -320,29 +317,12 @@ ind_spots = [
     (m(6) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(6) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
     
     # Road 2: Horizontal y=7, north side (5 zones placed in field corners)
-    (m(1) - TH_P/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(1) - TH_P/2, m(7) - TH_P/2),
-    (m(1) + TH_P/2, m(7) - TH_P/2 - m(0.125), m(1) + TH_P/2 + m(0.125), m(7) - TH_P/2),
     (m(2) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(2) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(3) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(3) + TH_T/2 + m(0.125), m(7) - TH_P/2),
     (m(4) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(4) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(5) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(5) + TH_T/2 + m(0.125), m(7) - TH_P/2),
     (m(6) - TH_T/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(6) - TH_T/2, m(7) - TH_P/2),
 ]
-
-diag_y_coords = [
-    (m(1.2), 'northeast'),
-    (m(1.5), 'southwest'),
-    (m(1.8), 'northeast'),
-    (m(2.1), 'southwest'),
-    (m(3.9), 'northeast'),
-    (m(4.1), 'southwest'),
-    (m(5.9), 'northeast'),
-    (m(6.2), 'southwest'),
-    (m(6.5), 'northeast'),
-    (m(6.8), 'southwest')
-]
-
-diag_ind_spots = []
-for y_c, side in diag_y_coords:
-    diag_ind_spots.append(get_diag_spot(y_c, side))
 
 # --- Farmland Clipping Geometry ---
 clips = []
@@ -453,10 +433,7 @@ for p in parcels:
                 create_unique_node(cx0_s, cy1_s),
             ]
             ns.append(ns[0])
-            if cy0 >= m(7) or cy0 < m(1):
-                add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
-            else:
-                add_way(ns, {'landuse': 'farmland'})
+            add_way(ns, {'landuse': 'farmland'})
             continue
             
         # Clip the shrunk rectangle with the diagonal forest (350px margin from road center)
@@ -480,46 +457,50 @@ for p in parcels:
                 
         # Generate left polygon nodes
         if has_left:
-            pts = [(cx0_s, cy0_s), (cx0_s, cy1_s)]
-            for y_val in reversed(y_vals):
-                L_y = get_road_x(y_val) - 350.0
-                px = max(cx0_s, min(cx1_s, L_y))
-                if pts[-1] != (px, y_val):
-                    pts.append((px, y_val))
-            if pts[-1] != pts[0]:
-                pts.append(pts[0])
-                
-            if len(pts) >= 4:
-                xs = [pt[0] for pt in pts]
-                ys = [pt[1] for pt in pts]
-                if (max(xs) - min(xs) > 10.0) and (max(ys) - min(ys) > 10.0):
-                    ns = [create_unique_node(x, y) for (x, y) in pts]
-                    if cy0 >= m(7) or cy0 < m(1):
-                        add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
-                    else:
+            valid_y_vals = [y for y in y_vals if get_road_x(y) - 350.0 > cx0_s]
+            if len(valid_y_vals) >= 2:
+                y_start = valid_y_vals[0]
+                y_end = valid_y_vals[-1]
+                pts = [(cx0_s, y_start), (cx0_s, y_end)]
+                for y_val in reversed(valid_y_vals):
+                    L_y = get_road_x(y_val) - 350.0
+                    px = max(cx0_s, min(cx1_s, L_y))
+                    if pts[-1] != (px, y_val):
+                        pts.append((px, y_val))
+                if pts[-1] != pts[0]:
+                    pts.append(pts[0])
+                    
+                if len(pts) >= 4:
+                    xs = [pt[0] for pt in pts]
+                    ys = [pt[1] for pt in pts]
+                    if (max(xs) - min(xs) > 10.0) and (max(ys) - min(ys) > 10.0):
+                        ns = [create_unique_node(x, y) for (x, y) in pts[:-1]]
+                        ns.append(ns[0])
                         add_way(ns, {'landuse': 'farmland'})
                         
         # Generate right polygon nodes
         if has_right:
-            pts = [(cx1_s, cy0_s)]
-            for y_val in y_vals:
-                R_y = get_road_x(y_val) + 350.0
-                px = max(cx0_s, min(cx1_s, R_y))
-                if pts[-1] != (px, y_val):
-                    pts.append((px, y_val))
-            if pts[-1] != (cx1_s, cy1_s):
-                pts.append((cx1_s, cy1_s))
-            if pts[-1] != pts[0]:
-                pts.append(pts[0])
-                
-            if len(pts) >= 4:
-                xs = [pt[0] for pt in pts]
-                ys = [pt[1] for pt in pts]
-                if (max(xs) - min(xs) > 10.0) and (max(ys) - min(ys) > 10.0):
-                    ns = [create_unique_node(x, y) for (x, y) in pts]
-                    if cy0 >= m(7) or cy0 < m(1):
-                        add_way(ns, {'landuse': 'farmland', 'crop': 'rice'})
-                    else:
+            valid_y_vals = [y for y in y_vals if get_road_x(y) + 350.0 < cx1_s]
+            if len(valid_y_vals) >= 2:
+                y_start = valid_y_vals[0]
+                y_end = valid_y_vals[-1]
+                pts = [(cx1_s, y_start)]
+                for y_val in valid_y_vals:
+                    R_y = get_road_x(y_val) + 350.0
+                    px = max(cx0_s, min(cx1_s, R_y))
+                    if pts[-1] != (px, y_val):
+                        pts.append((px, y_val))
+                if pts[-1] != (cx1_s, y_end):
+                    pts.append((cx1_s, y_end))
+                if pts[-1] != pts[0]:
+                    pts.append(pts[0])
+                    
+                if len(pts) >= 4:
+                    xs = [pt[0] for pt in pts]
+                    ys = [pt[1] for pt in pts]
+                    if (max(xs) - min(xs) > 10.0) and (max(ys) - min(ys) > 10.0):
+                        ns = [create_unique_node(x, y) for (x, y) in pts[:-1]]
+                        ns.append(ns[0])
                         add_way(ns, {'landuse': 'farmland'})
 
 # ================= Southern Zone Fields in OSM =================
@@ -553,8 +534,8 @@ for r in range(N_rows_s):
                 x = cx + R_s * math.cos(theta)
                 y = cy + R_s * math.sin(theta)
                 pts.append((x, y))
-            pts.append(pts[0])
             ns = [create_unique_node(x, y) for (x, y) in pts]
+            ns.append(ns[0])
             add_way(ns, {'landuse': 'farmland'})
         elif c in [5, 6]:
             # Rectangle (square farmland)
@@ -636,8 +617,8 @@ for col, row in [(3, 5), (4, 5), (5, 5), (6, 5)]:
         x = cx + R * math.cos(theta)
         y = cy + R * math.sin(theta)
         pts.append((x, y))
-    pts.append(pts[0])
     ns = [create_unique_node(x, y) for (x, y) in pts]
+    ns.append(ns[0])
     add_way(ns, {'landuse': 'farmland'})
 
 
@@ -728,7 +709,7 @@ for (x0, y0, x1, y1) in yards:
 
 # ================= 5. INDUSTRIAL SPOTS =================
 
-for (x0, y0, x1, y1) in ind_spots + diag_ind_spots:
+for (x0, y0, x1, y1) in ind_spots:
     ns = [
         create_unique_node(x0, y0),
         create_unique_node(x1, y0),
@@ -736,7 +717,7 @@ for (x0, y0, x1, y1) in ind_spots + diag_ind_spots:
         create_unique_node(x0, y1),
     ]
     ns.append(ns[0])
-    add_way(ns, {'landuse': 'industrial'})
+    add_way(ns, {'landuse': 'farmyard', 'building': 'industrial'})
 
 
 

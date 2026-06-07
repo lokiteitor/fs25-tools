@@ -508,9 +508,6 @@ for (x0, y0, x1, y1) in yards:
 # ================= INDUSTRIAL (21 grey rectangles: 1 north of town, 20 along primary roads) =================
 # Coordinates remove the 5px offset to touch the road fills directly.
 ind_spots = [
-    (m(1) + TH_P/2, 750, m(2) - TH_T/2, 950),                                          # Spot 3: 1000m x 200m thin strip (north of town, block x ∈ [1, 2], y ∈ [750, 950])
-    
-    # 20 industrial zones (4 hectares each, ~0.125 x 0.125 miles)
     # Road 1: Horizontal y=1, south side (5 zones placed in field corners)
     (m(3) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(3) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
     (m(3) + TH_T/2, m(1) + TH_P/2, m(3) + TH_T/2 + m(0.125), m(1) + TH_P/2 + m(0.125)),
@@ -519,28 +516,12 @@ ind_spots = [
     (m(6) - TH_T/2 - m(0.125), m(1) + TH_P/2, m(6) - TH_T/2, m(1) + TH_P/2 + m(0.125)),
     
     # Road 2: Horizontal y=7, north side (5 zones placed in field corners)
-    (m(1) - TH_P/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(1) - TH_P/2, m(7) - TH_P/2),
-    (m(1) + TH_P/2, m(7) - TH_P/2 - m(0.125), m(1) + TH_P/2 + m(0.125), m(7) - TH_P/2),
     (m(2) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(2) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(3) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(3) + TH_T/2 + m(0.125), m(7) - TH_P/2),
     (m(4) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(4) + TH_T/2 + m(0.125), m(7) - TH_P/2),
+    (m(5) + TH_T/2, m(7) - TH_P/2 - m(0.125), m(5) + TH_T/2 + m(0.125), m(7) - TH_P/2),
     (m(6) - TH_T/2 - m(0.125), m(7) - TH_P/2 - m(0.125), m(6) - TH_T/2, m(7) - TH_P/2),
 ]
-
-diag_y_coords = [
-    (m(1.2), 'northeast'),
-    (m(1.5), 'southwest'),
-    (m(1.8), 'northeast'),
-    (m(2.1), 'southwest'),
-    (m(3.9), 'northeast'),
-    (m(4.1), 'southwest'),
-    (m(5.9), 'northeast'),
-    (m(6.2), 'southwest'),
-    (m(6.5), 'northeast'),
-    (m(6.8), 'southwest')
-]
-
-for y_c, side in diag_y_coords:
-    ind_spots.append(get_diag_spot(y_c, side))
 
 for (x0, y0, x1, y1) in ind_spots:
     rect(x0, y0, x1, y1, C_IND, outline=C_FARMB, width=3)
