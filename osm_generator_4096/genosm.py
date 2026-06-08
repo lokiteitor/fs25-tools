@@ -120,7 +120,39 @@ def split_block(x0, y0, x1, y1, depth, edge, near_town):
 for i in range(MILES):
     x0, y0 = m(i), 0
     x1, y1 = m(i+1), m(0.5)
-    split_block(x0, y0, x1, y1, 0, True, True)
+    if i == 0:
+        # Sector 0: Left half = 2x1 rectangles; Right half = squares
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+    elif i == 1:
+        # Sector 1: Left half = 2x1 rectangle + 1x1 square
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 256, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 2:
+        # Sector 2: Left half = 2x1 rectangle + 1x1 square
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 256, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 3:
+        # Sector 3: Left half = 2x1 rectangle + 1x1 square
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 256, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
 
 # 2. Main grid rows:
 # Row 1: [512, 1024]
@@ -141,6 +173,8 @@ for i in range(MILES):
     x0, y0 = m(i), m(1.0)
     x1, y1 = m(i+1), m(2.0)
     if crosses_diagonal_forest(x0, y0, x1, y1):
+        if i == 3:
+            continue
         parcels.append((x0, y0, x1, y1))
         continue
     split_block(x0, y0, x1, y1, 0, True, True)
@@ -164,7 +198,40 @@ for i in range(MILES):
 for i in range(MILES):
     x0, y0 = m(i), m(3.5)
     x1, y1 = m(i+1), 4096
-    split_block(x0, y0, x1, y1, 0, True, True)
+    if i == 0:
+        # Sector 0: Left half = 1x1 square + 2x1 rectangle
+        parcels.append((x0, y0, x0 + 256, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 1:
+        # Sector 1: Left half = 1x1 square + 2x1 rectangle
+        parcels.append((x0, y0, x0 + 256, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 2:
+        # Sector 2: Left half = 1x1 square + 2x1 rectangle
+        parcels.append((x0, y0, x0 + 256, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 3:
+        # Sector 3: Left half = two 1x1 squares
+        parcels.append((x0 + 256, y0, x0 + 512, y0 + 256))
+        parcels.append((x0 + 256, y0 + 256, x0 + 512, y1))
+        # Right half = two 2x1 rectangles
+        parcels.append((x0 + 512, y0, x1, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x1, y1))
 
 # --- Geometries with GAP adjustments ---
 TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1 = m(1), m(2), m(0.5), m(1)
@@ -173,7 +240,20 @@ forests = []
 
 diag_forests = []
 
-yards = []
+yards = [
+    # Main farmyard (Southeast)
+    (3088, 3607, 3316, 4076),
+    # Main farmyard (Northwest)
+    (780, 24, 1008, 489),
+    # Northern road industrial zones (West, Mid-West, Mid-East) in field corners
+    (1292, 268, 1524, 489),
+    (2316, 268, 2548, 489),
+    (3340, 268, 3572, 489),
+    # Southern road industrial zones (West, Mid-West, Mid-East) in field corners
+    (268, 3607, 500, 3828),
+    (1292, 3607, 1524, 3828),
+    (2316, 3607, 2548, 3828)
+]
 
 num_forest_steps = 240
 for i in range(num_forest_steps):
@@ -364,6 +444,21 @@ for p in parcels:
 
 # Southern zone fields removed
 
+# ================= Column 4 Row 2 Circular Field in OSM =================
+cx = 3072 + 512
+cy = 1024 + 512
+R = 472
+pts = []
+# Generate circle approximation (32 nodes)
+for k in range(32):
+    theta = k * 2 * math.pi / 32
+    x = cx + R * math.cos(theta)
+    y = cy + R * math.sin(theta)
+    pts.append((x, y))
+ns = [create_unique_node(x, y) for (x, y) in pts]
+ns.append(ns[0])
+add_way(ns, {'landuse': 'farmland'})
+
 # ================= 2. TOWN =================
 
 town_nodes = [
@@ -380,13 +475,13 @@ for i in range(1, 7):
     x = TOWN_X0 + i * 100
     pts = [TOWN_Y0 + 10] + [TOWN_Y0 + j * 100 for j in range(1, 5)] + [m(1.0)]
     ns = [get_node(x, y_val) for y_val in pts]
-    add_way(ns, {'highway': 'residential'})
+    add_way(ns, {'highway': 'secondary'})
 
 for j in range(1, 5):
     y = TOWN_Y0 + j * 100
     pts = [TOWN_X0 + 10] + [TOWN_X0 + i * 100 for i in range(1, 7)] + [m(1.625)]
     ns = [get_node(x_val, y) for x_val in pts]
-    add_way(ns, {'highway': 'residential'})
+    add_way(ns, {'highway': 'secondary'})
 
 # ================= 3. FORESTS =================
 
@@ -427,7 +522,7 @@ for (x0, y0, x1, y1) in yards:
         create_unique_node(x0, y1),
     ]
     ns.append(ns[0])
-    add_way(ns, {'landuse': 'farmyard'})
+    add_way(ns, {'landuse': 'farmyard', 'building': 'industrial'})
 
 # ================= 8. ROADS =================
 # Horizontal roads

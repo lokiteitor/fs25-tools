@@ -95,7 +95,39 @@ def split_block(x0, y0, x1, y1, depth, edge, near_town):
 for i in range(MILES):
     x0, y0 = m(i), 0
     x1, y1 = m(i+1), m(0.5)
-    split_block(x0, y0, x1, y1, 0, True, True)
+    if i == 0:
+        # Sector 0: Left half = 2x1 rectangles; Right half = squares
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+    elif i == 1:
+        # Sector 1: Left half = 2x1 rectangle + 1x1 square
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 256, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 2:
+        # Sector 2: Left half = 2x1 rectangle + 1x1 square
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 256, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 3:
+        # Sector 3: Left half = 2x1 rectangle + 1x1 square
+        parcels.append((x0, y0, x0 + 512, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 256, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
 
 # 2. Main grid rows:
 # Row 1: [512, 1024]
@@ -130,7 +162,40 @@ for i in range(MILES):
 for i in range(MILES):
     x0, y0 = m(i), m(3.5)
     x1, y1 = m(i+1), 4096
-    split_block(x0, y0, x1, y1, 0, True, True)
+    if i == 0:
+        # Sector 0: Left half = 1x1 square + 2x1 rectangle
+        parcels.append((x0, y0, x0 + 256, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 1:
+        # Sector 1: Left half = 1x1 square + 2x1 rectangle
+        parcels.append((x0, y0, x0 + 256, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 2:
+        # Sector 2: Left half = 1x1 square + 2x1 rectangle
+        parcels.append((x0, y0, x0 + 256, y0 + 256))
+        parcels.append((x0, y0 + 256, x0 + 512, y1))
+        # Right half = four 256x256 squares
+        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
+        parcels.append((x0 + 768, y0, x1, y0 + 256))
+        parcels.append((x0 + 768, y0 + 256, x1, y1))
+    elif i == 3:
+        # Sector 3: Left half = two 1x1 squares
+        parcels.append((x0 + 256, y0, x0 + 512, y0 + 256))
+        parcels.append((x0 + 256, y0 + 256, x0 + 512, y1))
+        # Right half = two 2x1 rectangles
+        parcels.append((x0 + 512, y0, x1, y0 + 256))
+        parcels.append((x0 + 512, y0 + 256, x1, y1))
 
 # Draw farmland parcels with a simple single dividing line (no margins, W_FIELD_BORDER px border)
 C_FARMB = (0,0,0)
@@ -142,6 +207,12 @@ for (x0, y0, x1, y1) in parcels:
     cy1 = min(S - 20, y1)
     if cx1 - cx0 > 20 and cy1 - cy0 > 20:
         rect(cx0, cy0, cx1, cy1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+
+# Column 4 Row 2 Circular Field
+cx = 3072 + 512
+cy = 1024 + 512
+R = 472
+d.ellipse([cx - R, cy - R, cx + R, cy + R], fill=C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
 
 # Southern zone fields removed
 
@@ -257,7 +328,20 @@ d.polygon(forest_pts, fill=C_FOREST)
 
 # Southern forest removed
 
-yards = []
+yards = [
+    # Main farmyard (Southeast)
+    (3088, 3607, 3316, 4076),
+    # Main farmyard (Northwest)
+    (780, 24, 1008, 489),
+    # Northern road industrial zones (West, Mid-West, Mid-East) in field corners
+    (1292, 268, 1524, 489),
+    (2316, 268, 2548, 489),
+    (3340, 268, 3572, 489),
+    # Southern road industrial zones (West, Mid-West, Mid-East) in field corners
+    (268, 3607, 500, 3828),
+    (1292, 3607, 1524, 3828),
+    (2316, 3607, 2548, 3828)
+]
 
 for (x0, y0, x1, y1) in yards:
     rect(x0, y0, x1, y1, C_YARD, outline=C_YARDB, width=5)
