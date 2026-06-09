@@ -78,53 +78,7 @@ CW = 26                       # Canal width
 off = TH_T/2 + CW/2 + GAP
 
 
-def generate_lake_polygon(cx, cy, target_area):
-    n_points = 200
-    points = []
-    a_base = 2.8
-    b_base = 1.0
-    for i in range(n_points):
-        theta = i * 2 * math.pi / n_points
-        # Irregular noise using multiple sine/cosine waves
-        r_noise = 1.0 + 0.18 * math.sin(4 * theta) + 0.08 * math.cos(7 * theta) + 0.04 * math.sin(12 * theta)
-        x = a_base * r_noise * math.cos(theta)
-        y = b_base * r_noise * math.sin(theta)
-        points.append((x, y))
-        
-    # Calculate base area with Shoelace formula
-    current_area = 0.0
-    for i in range(n_points):
-        x1, y1 = points[i]
-        x2, y2 = points[(i + 1) % n_points]
-        current_area += (x1 * y2 - x2 * y1)
-    current_area = abs(current_area) / 2.0
-    
-    scale = math.sqrt(target_area / current_area)
-    
-    final_points = []
-    for (x, y) in points:
-        fx = cx + x * scale
-        fy = cy + y * scale
-        final_points.append((fx, fy))
-    return final_points
-
-def generate_road_loop(lake_points, cx, cy, bx=120, by=60):
-    road_points = []
-    for (x, y) in lake_points:
-        dx = x - cx
-        dy = y - cy
-        dist = math.sqrt(dx*dx + dy*dy)
-        if dist == 0:
-            rx, ry = cx, cy
-        else:
-            rx = cx + dx + (dx / dist) * bx
-            ry = cy + dy + (dy / dist) * by
-        road_points.append((rx, ry))
-    return road_points
-
-lake_pts = generate_lake_polygon(5000, 500, 800000)
-road_loop_pts = generate_road_loop(lake_pts, 5000, 500, 120, 60)
-road_loop_pts[69] = (4384, 800)
+# Lake and road loop definitions removed
 
 # --- Georeferencing ---
 # Center: (27.07991, -109.70707)
@@ -210,12 +164,20 @@ for i in range(MILES):
         
         is_north = (j == 0)
         if is_north:
-            x_mid = x0 + 512
-            for r in range(4):
-                y_start = y0 + r * 256
-                y_end = y_start + 256
-                parcels.append((x0, y_start, x_mid, y_end))
-                parcels.append((x_mid, y_start, x1, y_end))
+            if i >= 4:
+                # East half: long fields from east to west (no x_mid split)
+                for r in range(4):
+                    y_start = y0 + r * 256
+                    y_end = y_start + 256
+                    parcels.append((x0, y_start, x1, y_end))
+            else:
+                # West half: standard split
+                x_mid = x0 + 512
+                for r in range(4):
+                    y_start = y0 + r * 256
+                    y_end = y_start + 256
+                    parcels.append((x0, y_start, x_mid, y_end))
+                    parcels.append((x_mid, y_start, x1, y_end))
             continue
             
         if i == 1 and j == 1:
@@ -266,7 +228,6 @@ yards = [
     (m(1) + TH_P/2, m(4.4), m(1) + TH_P/2 + m(0.2), m(4.6)),
     (m(1.625), m(1.0), m(2.0), m(1.5)),
     (m(7) - TH_P/2 - m(0.5), m(4.25), m(7) - TH_P/2, m(4.75)),
-    (3850, 120, 6150, 965), # Lake enclosing farmyard (surrounds the northern lake)
     (3846, 7380, 4346, 7880) # Southern Yard: 500x500px in the middle of southern zone
 ]
 
@@ -332,8 +293,7 @@ clips.append((0, S - 100, S, S))
 clips.append((0, 0, 100, S))
 clips.append((S - 100, 0, S, S))
 
-# Railway tracks corridor clip to clear fields from tracks
-clips.append((0, 950, S, 1010))
+
 
 clips.append((m(1.0), m(1.0), m(1.625), m(1.5))) # Top-west of town
 for f in forests:
@@ -358,11 +318,9 @@ for k in range(1, MILES):
 
 # Diagonal primary road is entirely inside the diagonal forest buffer, so we don't clip farmlands against it.
 
-# Add new track road footprint to clips (connects city farmyard to lake farmyard)
-hw_track = TH_T/2 + W_ROAD_BORDER
-clips.append((2048 - hw_track, 800 - hw_track, 2048 + hw_track, 1024 + hw_track))
-clips.append((2048 - hw_track, 800 - hw_track, 4384 + hw_track, 800 + hw_track))
+
 # Add southern track footprints to clips
+hw_track = TH_T/2 + W_ROAD_BORDER
 clips.append((4096 - hw_track, 7168 - hw_track, 4096 + hw_track, 8040 + hw_track))
 clips.append((100, 8040 - hw_track, 8092, 8040 + hw_track))
 
@@ -660,7 +618,7 @@ for (x0, y0, x1, y1) in forests:
         create_unique_node(x0, y1),
     ]
     ns.append(ns[0])
-    add_way(ns, {'landuse': 'forest'})
+    add_way(ns, {'landuse': 'farmyard', 'natural': 'wood', 'leaf_type': 'broadleaf'})
 
 # Single curved forest polygon for OSM (1 km wide = 318px half-width)
 forest_nodes = []
@@ -680,20 +638,9 @@ for y_px in range(int(m(7)), int(m(1)) - 1, -32):
 forest_nodes.append(forest_nodes[0])
 
 # Add the forest way
-add_way(forest_nodes, {'natural': 'wood', 'name': 'Bosque de la Diagonal'})
+add_way(forest_nodes, {'landuse': 'farmyard', 'natural': 'wood', 'leaf_type': 'broadleaf', 'name': 'Bosque de la Diagonal'})
 
-# ================= LAKE (200 hectares irregular lake in the north) =================
-lake_nodes = [create_unique_node(x, y) for (x, y) in lake_pts]
-lake_nodes.append(lake_nodes[0]) # Close polygon
-add_way(lake_nodes, {'natural': 'water', 'water': 'lake', 'name': 'Lago del Norte'})
-
-
-# ================= RAILWAY (Horizontal railway track crossing from east to west at y=980) =================
-rail_nodes = [
-    create_unique_node(0, 980),
-    create_unique_node(S, 980)
-]
-add_way(rail_nodes, {'railway': 'rail', 'name': 'Línea Ferroviaria del Norte'})
+# Lake and railway tracks removed
 
 # ================= 4. FARMYARDS =================
 
@@ -766,18 +713,7 @@ diag_pts = sorted(list(set(diag_pts)), key=lambda p: p[1])
 diag_nodes = [get_node(x, y) for (x, y) in diag_pts]
 add_way(diag_nodes, {'highway': 'primary'})
 
-# New track road connecting city farmyard to lake farmyard
-track_nodes = [
-    get_node(2048, 1024),
-    get_node(2048, 800),
-    get_node(4384, 800)
-]
-add_way(track_nodes, {'highway': 'track', 'name': 'Camino de Terracería del Lago'})
 
-# Road loop surrounding the lake
-loop_nodes = [get_node(x, y) for (x, y) in road_loop_pts]
-loop_nodes.append(loop_nodes[0]) # Close the loop
-add_way(loop_nodes, {'highway': 'track', 'name': 'Camino del Lago'})
 
 # Southern track roads
 south_vertical_track = [

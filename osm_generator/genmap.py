@@ -134,12 +134,20 @@ for i in range(MILES):
         
         is_north = (j == 0)
         if is_north:
-            x_mid = x0 + 512
-            for r in range(4):
-                y_start = y0 + r * 256
-                y_end = y_start + 256
-                parcels.append((x0, y_start, x_mid, y_end))
-                parcels.append((x_mid, y_start, x1, y_end))
+            if i >= 4:
+                # East half: long fields from east to west (no x_mid split)
+                for r in range(4):
+                    y_start = y0 + r * 256
+                    y_end = y_start + 256
+                    parcels.append((x0, y_start, x1, y_end))
+            else:
+                # West half: standard split
+                x_mid = x0 + 512
+                for r in range(4):
+                    y_start = y0 + r * 256
+                    y_end = y_start + 256
+                    parcels.append((x0, y_start, x_mid, y_end))
+                    parcels.append((x_mid, y_start, x1, y_end))
             continue
             
         if i == 1 and j == 1:
@@ -173,28 +181,14 @@ for i in range(MILES):
 C_FARMB = (0,0,0)
 C_RICE = (115, 165, 135)  # Flooded rice paddy color (blend of blue-green)
 
-def split_by_horizontal_strip(x0, y0, x1, y1, s_min, s_max):
-    if y1 <= s_min:
-        return [(x0, y0, x1, y1)]
-    if y0 >= s_max:
-        return [(x0, y0, x1, y1)]
-    parts = []
-    if y0 < s_min:
-        parts.append((x0, y0, x1, s_min))
-    if y1 > s_max:
-        parts.append((x0, s_max, x1, y1))
-    return parts
-
 for (x0, y0, x1, y1) in parcels:
-    split_parts = split_by_horizontal_strip(x0, y0, x1, y1, 950, 1010)
-    for (sx0, sy0, sx1, sy1) in split_parts:
-        cx0 = max(100, sx0)
-        cy0 = max(100, sy0)
-        cx1 = min(S - 100, sx1)
-        cy1 = min(S - 100, sy1)
-        if cx1 - cx0 > 20 and cy1 - cy0 > 20:
-            fill_col = C_RICE if (sy0 >= m(7) or sy0 < m(1)) else C_FARM
-            rect(cx0, cy0, cx1, cy1, fill_col, outline=C_FARMB, width=W_FIELD_BORDER)
+    cx0 = max(100, x0)
+    cy0 = max(100, y0)
+    cx1 = min(S - 100, x1)
+    cy1 = min(S - 100, y1)
+    if cx1 - cx0 > 20 and cy1 - cy0 > 20:
+        fill_col = C_RICE if (y0 >= m(7) or y0 < m(1)) else C_FARM
+        rect(cx0, cy0, cx1, cy1, fill_col, outline=C_FARMB, width=W_FIELD_BORDER)
 
 # Southern Zone Fields (West: 5 circular fields + 2 square fields + 2 columns of 2x2 split fields in 2 rows, East: horizontal thin strips split in 2x4)
 y_start = 7208
@@ -260,77 +254,7 @@ for col, row in [(3, 5), (4, 5), (5, 5), (6, 5)]:
 
 
 # ================= LAKE (200 hectares irregular lake in the north) =================
-def generate_lake_polygon(cx, cy, target_area):
-    n_points = 200
-    points = []
-    # Base ellipse with a:b ratio of 2.8:1 to fit horizontally in the north
-    a_base = 2.8
-    b_base = 1.0
-    for i in range(n_points):
-        theta = i * 2 * math.pi / n_points
-        # Irregular noise using multiple sine/cosine waves
-        r_noise = 1.0 + 0.18 * math.sin(4 * theta) + 0.08 * math.cos(7 * theta) + 0.04 * math.sin(12 * theta)
-        x = a_base * r_noise * math.cos(theta)
-        y = b_base * r_noise * math.sin(theta)
-        points.append((x, y))
-        
-    # Calculate base area with Shoelace formula
-    current_area = 0.0
-    for i in range(n_points):
-        x1, y1 = points[i]
-        x2, y2 = points[(i + 1) % n_points]
-        current_area += (x1 * y2 - x2 * y1)
-    current_area = abs(current_area) / 2.0
-    
-    scale = math.sqrt(target_area / current_area)
-    
-    # Scale and translate to center
-    final_points = []
-    for (x, y) in points:
-        fx = cx + x * scale
-        fy = cy + y * scale
-        final_points.append((fx, fy))
-    return final_points
-
-lake_pts = generate_lake_polygon(5000, 500, 800000)
-
-def generate_road_loop(lake_points, cx, cy, bx=120, by=60):
-    road_points = []
-    for (x, y) in lake_points:
-        dx = x - cx
-        dy = y - cy
-        dist = math.sqrt(dx*dx + dy*dy)
-        if dist == 0:
-            rx, ry = cx, cy
-        else:
-            rx = cx + dx + (dx / dist) * bx
-            ry = cy + dy + (dy / dist) * by
-        road_points.append((rx, ry))
-    return road_points
-
-road_loop_pts = generate_road_loop(lake_pts, 5000, 500, 120, 60)
-road_loop_pts[69] = (4384, 800)
-
-# Draw enclosing rectangular farmyard
-rect(3850, 120, 6150, 965, C_YARD, outline=C_YARDB, width=5)
-
-# Draw lake fill
-d.polygon(lake_pts, fill=C_WATER)
-# Draw lake outline (black)
-d.line(lake_pts + [lake_pts[0]], fill=C_FARMB, width=12)
-
-
-# ================= RAILWAY (Horizontal railway track crossing from east to west at y=980) =================
-y_rail = 980
-# 1. Draw ballast bed (light grey-brown)
-rect(0, y_rail - 15, S, y_rail + 15, (170, 160, 150))
-# 2. Draw sleepers/ties (vertical black bars spaced every 36 pixels)
-for x in range(10, S, 36):
-    rect(x - 3, y_rail - 12, x + 3, y_rail + 12, C_FARMB)
-# 3. Draw two parallel steel rails (rust red/orange)
-C_RAIL = (180, 60, 60)
-rect(0, y_rail - 7, S, y_rail - 4, C_RAIL)
-rect(0, y_rail + 4, S, y_rail + 7, C_RAIL)
+# Lake, lake farmyard, road loop, and railway removed as requested
 
 
 # Merge a few adjacent parcels to create L-shaped fields by erasing their shared boundary
@@ -430,10 +354,7 @@ for k, x in enumerate(vlines):
 # Draw diagonal primary road outline
 d.line(road_pts, fill=C_FARMB, width=TH_P + 2*W_ROAD_BORDER, joint="round")
 
-# Draw new track road outline connecting city farmyard to lake farmyard
-d.line([(2048, 1024), (2048, 800), (4384, 800)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
-# Draw road loop outline around the lake
-d.line(road_loop_pts + [road_loop_pts[0]], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+
 # Draw southern track road outlines
 d.line([(4096, 7168), (4096, 8040)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
 d.line([(100, 8040), (8092, 8040)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
@@ -542,10 +463,7 @@ for k, x in enumerate(vlines):
 # Draw diagonal primary road fill
 d.line(road_pts, fill=C_ROADP, width=TH_P, joint="round")
 
-# Draw new track road fill connecting city farmyard to lake farmyard
-d.line([(2048, 1024), (2048, 800), (4384, 800)], fill=C_ROADT, width=TH_T, joint="round")
-# Draw road loop fill around the lake
-d.line(road_loop_pts + [road_loop_pts[0]], fill=C_ROADT, width=TH_T, joint="round")
+
 # Draw southern track road fills
 d.line([(4096, 7168), (4096, 8040)], fill=C_ROADT, width=TH_T, joint="round")
 d.line([(100, 8040), (8092, 8040)], fill=C_ROADT, width=TH_T, joint="round")
