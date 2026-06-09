@@ -201,10 +201,10 @@ for i in range(MILES):
 C_FARMB = (0,0,0)
 
 for (x0, y0, x1, y1) in parcels:
-    cx0 = max(20, x0)
-    cy0 = max(20, y0)
-    cx1 = min(S - 20, x1)
-    cy1 = min(S - 20, y1)
+    cx0 = max(35, x0)
+    cy0 = max(35, y0)
+    cx1 = min(S - 35, x1)
+    cy1 = min(S - 35, y1)
     if cx1 - cx0 > 20 and cy1 - cy0 > 20:
         rect(cx0, cy0, cx1, cy1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
 
@@ -313,13 +313,13 @@ margin_pts = []
 forest_pts = []
 for y_px in range(512, int(m(3.5)) + 1, 4):
     xc = get_road_x(y_px)
-    margin_pts.append((min(S - 20.0, xc + 350.0), y_px))
-    forest_pts.append((min(S - 20.0, xc + 318.0), y_px))
+    margin_pts.append((min(S - 35.0, xc + 350.0), y_px))
+    forest_pts.append((min(S - 35.0, xc + 318.0), y_px))
 
 for y_px in range(int(m(3.5)), 511, -4):
     xc = get_road_x(y_px)
-    margin_pts.append((max(20.0, xc - 350.0), y_px))
-    forest_pts.append((max(20.0, xc - 318.0), y_px))
+    margin_pts.append((max(35.0, xc - 350.0), y_px))
+    forest_pts.append((max(35.0, xc - 318.0), y_px))
 
 # Draw black margin first
 d.polygon(margin_pts, fill=C_FARMB)
@@ -327,6 +327,12 @@ d.polygon(margin_pts, fill=C_FARMB)
 d.polygon(forest_pts, fill=C_FOREST)
 
 # Southern forest removed
+
+# Paint the 10m forest border surrounding the map at the very edge (from 0 to 10)
+rect(0, 0, S, 10, C_FOREST)
+rect(0, S - 10, S, S, C_FOREST)
+rect(0, 0, 10, S, C_FOREST)
+rect(S - 10, 0, S, S, C_FOREST)
 
 yards = [
     # Main farmyard (Southeast)
@@ -364,11 +370,11 @@ d.line(road_pts, fill=C_ROADP, width=TH_P, joint="round")
 d.line([(2445, 2048), (2445, 3584)], fill=C_ROADT, width=TH_T, joint="round")
 
 
-# Paint the 20m border solid black (unassigned area)
-rect(0, 0, S, 20, (0, 0, 0))
-rect(0, S - 20, S, S, (0, 0, 0))
-rect(0, 0, 20, S, (0, 0, 0))
-rect(S - 20, 0, S, S, (0, 0, 0))
+# Paint the 25m border solid black (unassigned area, from 10 to 35)
+rect(10, 10, S - 10, 35, (0, 0, 0))
+rect(10, S - 35, S - 10, S - 10, (0, 0, 0))
+rect(10, 10, 35, S - 10, (0, 0, 0))
+rect(S - 35, 10, S - 10, S - 10, (0, 0, 0))
 
 img.save("outputs/zoning_map.png")
 print("done: map generated with PLSS grid")

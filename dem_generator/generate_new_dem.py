@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
 
 def val_noise(shape, grid_size, weight, seed=20260608):
-    """Generates smooth value noise by upscaling a small random grid."""
+    """Generates smooth value noise by upscaling a small random grid using bicubic interpolation."""
     np.random.seed(seed)
     small = np.random.uniform(-1.0, 1.0, size=(grid_size, grid_size)).astype(np.float32)
     temp_img = Image.fromarray(small)
-    temp_img = temp_img.resize((shape[1], shape[0]), Image.Resampling.BILINEAR)
+    temp_img = temp_img.resize((shape[1], shape[0]), Image.Resampling.BICUBIC)
     return np.array(temp_img) * weight
 
 def main():
@@ -94,18 +94,8 @@ def main():
     print("   Smoothing entire terrain (macro-smoothing)...")
     terrain = gaussian_filter(terrain, sigma=6)
     
-    print("   Adding high-frequency micro-detail noise (pixel-level detail)...")
-    # 1. Medium-high frequency detail
-    micro_detail = val_noise((S, S), 1024, 75, seed=seed+7)
-    # 2. High frequency detail
-    micro_detail += val_noise((S, S), 2048, 30, seed=seed+8)
-    # 3. Pixel-level micro-roughness (smoothed white noise for soil texture)
-    np.random.seed(seed+9)
-    white_noise = np.random.normal(size=(S, S)).astype(np.float32)
-    micro_detail += gaussian_filter(white_noise, sigma=1.5) * 16.0
-    
-    # Add micro-detail to the terrain, but mask it out from the flat playable area
-    terrain += (1.0 - w_flat) * micro_detail
+    # High-frequency micro-detail noise is omitted to ensure the DEM is completely smooth
+    # and suitable for farming vehicle physics without roughness or jitter.
     
     print("5. Flattening southern farmyards with extra-gentle transitions...")
     offset = 2048

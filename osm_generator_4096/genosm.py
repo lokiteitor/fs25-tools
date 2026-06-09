@@ -236,7 +236,12 @@ for i in range(MILES):
 # --- Geometries with GAP adjustments ---
 TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1 = m(1), m(2), m(0.5), m(1)
 
-forests = []
+forests = [
+    (0, 0, S, 10),
+    (0, S - 10, S, S),
+    (0, 0, 10, S),
+    (S - 10, 0, S, S)
+]
 
 diag_forests = []
 
@@ -261,8 +266,8 @@ for i in range(num_forest_steps):
     y1 = m(0.5 + (i + 1) * (2.5 / num_forest_steps))
     ym = (y0 + y1) / 2
     xc = get_road_x(ym)
-    x0 = max(20.0, xc - 350.0)
-    x1 = min(S - 20.0, xc + 350.0)
+    x0 = max(35.0, xc - 350.0)
+    x1 = min(S - 35.0, xc + 350.0)
     diag_forests.append((x0, y0, x1, y1))
 
 def find_intersection_y(target_x):
@@ -279,11 +284,11 @@ def find_intersection_y(target_x):
 
 # --- Farmland Clipping Geometry ---
 clips = []
-# 20m unassigned border clip
-clips.append((0, 0, S, 20))
-clips.append((0, S - 20, S, S))
-clips.append((0, 0, 20, S))
-clips.append((S - 20, 0, S, S))
+# 35m unassigned border clip (includes forest from 0 to 10 and black strip from 10 to 35)
+clips.append((0, 0, S, 35))
+clips.append((0, S - 35, S, S))
+clips.append((0, 0, 35, S))
+clips.append((S - 35, 0, S, S))
 
 clips.append((m(1.0), m(0.5), m(1.625), m(1.0))) # Town residential clip
 
@@ -500,13 +505,13 @@ forest_nodes = []
 # Right side: from top to bottom (y = m(0.5) to m(3.5))
 for y_px in range(int(m(0.5)), int(m(3.5)) + 1, 32):
     xc = get_road_x(y_px)
-    xr = min(S - 20.0, xc + 318.0)
+    xr = min(S - 35.0, xc + 318.0)
     forest_nodes.append(create_unique_node(xr, y_px))
 
 # Left side: from bottom to top (y = m(3.5) to m(0.5))
 for y_px in range(int(m(3.5)), int(m(0.5)) - 1, -32):
     xc = get_road_x(y_px)
-    xl = max(20.0, xc - 318.0)
+    xl = max(35.0, xc - 318.0)
     forest_nodes.append(create_unique_node(xl, y_px))
 
 forest_nodes.append(forest_nodes[0])
