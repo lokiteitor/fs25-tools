@@ -1,9 +1,14 @@
 import os
+import sys
 import time
 import math
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy.ndimage import gaussian_filter
+
+# Import irregular forest coordinates from common.py
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../osm_generator_4096")))
+from common import IRREGULAR_FOREST_PTS
 
 # For generating visual maps
 import matplotlib
@@ -93,6 +98,33 @@ def main():
     
     print("   Smoothing entire terrain (macro-smoothing)...")
     terrain = gaussian_filter(terrain, sigma=6)
+    
+    # Add the irregular hill corresponding to the forest in Column 1 Row 3
+    print("4. Adding the irregular hill for the western forest (Colina)...")
+    # Scale coordinates from 4096px zoning map to 8192px DEM (x_dem = x_zoning + 2048)
+    offset = 2048
+    forest_pts_dem = [(x + offset, y + offset) for (x, y) in IRREGULAR_FOREST_PTS]
+    
+    # Create mask of the irregular forest
+    hill_mask_img = Image.new("L", (S, S), 0)
+    draw_hill = ImageDraw.Draw(hill_mask_img)
+    draw_hill.polygon(forest_pts_dem, fill=255)
+    
+    # Convert mask to float numpy array
+    hill_mask = np.array(hill_mask_img, dtype=np.float32) / 255.0
+    
+    # Smooth the mask to get an organic hill shape (sigma=150.0 = ~150 meters transition)
+    smooth_hill = gaussian_filter(hill_mask, sigma=150.0)
+    
+    # Normalize so peak is exactly 1.0
+    if smooth_hill.max() > 0:
+        smooth_hill = smooth_hill / smooth_hill.max()
+        
+    # Scale to 300 meters height (300m * 100 units/m = 30000 units)
+    hill_elevation = smooth_hill * 30000.0
+    
+    # Add to the terrain
+    terrain = terrain + hill_elevation
     
     # High-frequency micro-detail noise is omitted to ensure the DEM is completely smooth
     # and suitable for farming vehicle physics without roughness or jitter.
@@ -200,7 +232,14 @@ def main():
                                      fill=False, edgecolor='yellow', linewidth=2, linestyle=':', label='Flat North Area')
     ax.add_patch(rect_flat_north)
     
-    plt.legend(handles=[rect_playable, rect_flat_north], loc='upper right', facecolor='black', labelcolor='white')
+    # Draw the irregular forest hill polygon
+    vis_x = [(x + offset) / vis_scale for (x, y) in IRREGULAR_FOREST_PTS]
+    vis_y = [(y + offset) / vis_scale for (x, y) in IRREGULAR_FOREST_PTS]
+    vis_x.append(vis_x[0])
+    vis_y.append(vis_y[0])
+    line_hill, = ax.plot(vis_x, vis_y, color='cyan', linewidth=2, linestyle='-', label='Hill (Colina)')
+    
+    plt.legend(handles=[rect_playable, rect_flat_north, line_hill], loc='upper right', facecolor='black', labelcolor='white')
     plt.savefig(output_vis_path, bbox_inches='tight')
     plt.close()
     print(f"   Saved full visualization to '{output_vis_path}'.")
@@ -229,6 +268,14 @@ def main():
     ax.axhline(y=(ry1/vis_scale) - p_start, color='yellow', linestyle=':', linewidth=2.5)
     ax.text(10, (ry1/vis_scale) - p_start - 8, "FLAT VALLEY FLOOR (North)", color='yellow', fontsize=10, fontweight='bold')
     ax.text(10, (ry1/vis_scale) - p_start + 15, "TRANSITION RAMP (500m)", color='yellow', fontsize=10, fontweight='bold')
+    
+    # Draw detailed irregular hill polygon
+    vis_detail_x = [((x + offset) / vis_scale) - p_start for (x, y) in IRREGULAR_FOREST_PTS]
+    vis_detail_y = [((y + offset) / vis_scale) - p_start for (x, y) in IRREGULAR_FOREST_PTS]
+    vis_detail_x.append(vis_detail_x[0])
+    vis_detail_y.append(vis_detail_y[0])
+    ax.plot(vis_detail_x, vis_detail_y, color='cyan', linewidth=2.5, linestyle='-')
+    ax.text(vis_detail_x[0] + 5, vis_detail_y[0] + 15, "Hill (Colina)", color='cyan', fontsize=10, fontweight='bold')
     
     plt.savefig(output_detail_vis_path, bbox_inches='tight')
     plt.close()

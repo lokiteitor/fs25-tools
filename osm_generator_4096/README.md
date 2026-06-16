@@ -24,6 +24,7 @@ Este proyecto contiene una variante de las herramientas de generación de mapas 
 
 | Script | Descripción | Salidas |
 | :--- | :--- | :--- |
+| [`common.py`](file:///home/ddelgado/git/lab/fs25-tools/osm_generator_4096/common.py) | Geometría y layout compartidos (escala, carretera diagonal, parcelas, granjas) que ambos generadores deben mantener idénticos | — |
 | [`genmap.py`](file:///home/ddelgado/git/lab/fs25-tools/osm_generator_4096/genmap.py) | Generador de Mapas | Imagen PNG de alta resolución (4096x4096 px) |
 | [`genosm.py`](file:///home/ddelgado/git/lab/fs25-tools/osm_generator_4096/genosm.py) | Generador de Datos OSM | Archivo XML de OpenStreetMap (`.osm`) |
 

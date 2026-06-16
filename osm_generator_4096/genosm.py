@@ -1,44 +1,21 @@
 import random
-import math
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import os
 
+from common import (
+    S, MILES, PPM, m,
+    TH_P, TH_S, TH_T, W_ROAD_BORDER, GAP, BORDER,
+    hlines, yards,
+    get_road_x, crosses_diagonal_forest, find_intersection_y, in_town,
+    split_block, build_northern_strip, build_southern_strip,
+    TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1, TOWN_STREET_SPACING,
+    TOWN_VSTREETS, TOWN_HSTREETS, COL4_FIELDS,
+    IRREGULAR_FOREST_PTS,
+)
+
 # --- Configurations ---
 random.seed(20240605)
-
-S = 4096                      # canvas px
-MILES = 4                     # real miles across
-PPM = S / MILES               # px per mile = 1024
-def m(x): return x * PPM      # helper for miles
-
-def get_road_x(y):
-    y_miles = y / PPM
-    if y_miles <= 0.5:
-        return m(3.0)
-    elif y_miles >= 3.5:
-        return m(1.0)
-    else:
-        u = (y_miles - 0.5) / (3.5 - 0.5)
-        x_miles = 1.0 + 2.0 * (1.0 + math.cos(math.pi * u)) / 2.0
-        return m(x_miles)
-
-def crosses_diagonal_forest(x0, y0, x1, y1):
-    if y1 <= m(0.5) or y0 >= m(3.5):
-        return False
-    y_start = max(y0, m(0.5))
-    y_end = min(y1, m(3.5))
-    for y in [y_start, (y_start + y_end)/2, y_end]:
-        rx = get_road_x(y)
-        if x0 - 350 <= rx <= x1 + 350:
-            return True
-    return False
-
-TH_P = 22                     # primary
-TH_S = 16                     # secondary
-TH_T = 8                      # track
-GAP = 40                      # Greater separation between polygons and roads
-W_ROAD_BORDER = 12            # Black border/margin for roads
 
 # --- Georeferencing ---
 # Center: (27.07991, -109.70707)
@@ -89,84 +66,23 @@ def add_way(nodes_list, tags):
 
 # ================= 1. FIELDS (Farmland Parcels) =================
 parcels = []
-def in_town(cx, cy):
-    return m(1) <= cx < m(2) and m(0.5) <= cy < m(1)
-
-def split_block(x0, y0, x1, y1, depth, edge, near_town):
-    w = x1 - x0
-    h = y1 - y0
-    
-    maxdepth = 1
-        
-    if depth >= 1 and random.random() < 0.52:
-        parcels.append((x0, y0, x1, y1))
-        return
-        
-    if depth >= maxdepth or (w < m(0.15) or h < m(0.15)):
-        parcels.append((x0, y0, x1, y1))
-        return
-        
-    r = random.uniform(0.3, 0.7)
-    if w >= h:
-        xm = x0 + w * r
-        split_block(x0, y0, xm, y1, depth + 1, edge, near_town)
-        split_block(xm, y0, x1, y1, depth + 1, edge, near_town)
-    else:
-        ym = y0 + h * r
-        split_block(x0, y0, x1, ym, depth + 1, edge, near_town)
-        split_block(x0, ym, x1, y1, depth + 1, edge, near_town)
 
 # 1. Northern strip (Row 0): [0, 512] - Medium farmlands
-for i in range(MILES):
-    x0, y0 = m(i), 0
-    x1, y1 = m(i+1), m(0.5)
-    if i == 0:
-        # Sector 0: Left half = 2x1 rectangles; Right half = squares
-        parcels.append((x0, y0, x0 + 512, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 512, y1))
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-    elif i == 1:
-        # Sector 1: Left half = 2x1 rectangle + 1x1 square
-        parcels.append((x0, y0, x0 + 512, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 256, y1))
-        # Right half = four 256x256 squares
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-        parcels.append((x0 + 768, y0, x1, y0 + 256))
-        parcels.append((x0 + 768, y0 + 256, x1, y1))
-    elif i == 2:
-        # Sector 2: Left half = 2x1 rectangle + 1x1 square
-        parcels.append((x0, y0, x0 + 512, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 256, y1))
-        # Right half = four 256x256 squares
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-        parcels.append((x0 + 768, y0, x1, y0 + 256))
-        parcels.append((x0 + 768, y0 + 256, x1, y1))
-    elif i == 3:
-        # Sector 3: Left half = 2x1 rectangle + 1x1 square
-        parcels.append((x0, y0, x0 + 512, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 256, y1))
-        # Right half = four 256x256 squares
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-        parcels.append((x0 + 768, y0, x1, y0 + 256))
-        parcels.append((x0 + 768, y0 + 256, x1, y1))
+build_northern_strip(parcels)
 
 # 2. Main grid rows:
 # Row 1: [512, 1024]
 for i in range(MILES):
     if i == 1:
-        # Town section: town itself is at [m(1.0), m(1.625)], the rest is farmland
-        split_block(m(1.625), m(0.5), m(2.0), m(1.0), 0, True, True)
+        # Town section: town itself is at [TOWN_X0, TOWN_X1], the rest is farmland
+        split_block(parcels, TOWN_X1, m(0.5), m(2.0), m(1.0), 0, True, True)
         continue
     x0, y0 = m(i), m(0.5)
     x1, y1 = m(i+1), m(1.0)
     if crosses_diagonal_forest(x0, y0, x1, y1):
         parcels.append((x0, y0, x1, y1))
         continue
-    split_block(x0, y0, x1, y1, 0, True, True)
+    split_block(parcels, x0, y0, x1, y1, 0, True, True)
 
 # Row 2: [1024, 2048]
 for i in range(MILES):
@@ -174,10 +90,13 @@ for i in range(MILES):
     x1, y1 = m(i+1), m(2.0)
     if crosses_diagonal_forest(x0, y0, x1, y1):
         if i == 3:
+            # Columna 4: dos campos que rellenan toda la celda; el clipping
+            # contra el bosque diagonal genera el borde oeste curvo.
+            parcels.extend(COL4_FIELDS)
             continue
         parcels.append((x0, y0, x1, y1))
         continue
-    split_block(x0, y0, x1, y1, 0, True, True)
+    split_block(parcels, x0, y0, x1, y1, 0, True, True)
 
 # Row 3: [2048, 3072]
 for i in range(MILES):
@@ -186,7 +105,7 @@ for i in range(MILES):
     if crosses_diagonal_forest(x0, y0, x1, y1):
         parcels.append((x0, y0, x1, y1))
         continue
-    split_block(x0, y0, x1, y1, 0, True, True)
+    split_block(parcels, x0, y0, x1, y1, 0, True, True)
 
 # Row 4 (Clean Area): [3072, 3584]
 for i in range(MILES):
@@ -195,70 +114,11 @@ for i in range(MILES):
     parcels.append((x0, y0, x1, y1))
 
 # 3. Southern strip: [3584, 4096] - Medium farmlands
-for i in range(MILES):
-    x0, y0 = m(i), m(3.5)
-    x1, y1 = m(i+1), 4096
-    if i == 0:
-        # Sector 0: Left half = 1x1 square + 2x1 rectangle
-        parcels.append((x0, y0, x0 + 256, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 512, y1))
-        # Right half = four 256x256 squares
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-        parcels.append((x0 + 768, y0, x1, y0 + 256))
-        parcels.append((x0 + 768, y0 + 256, x1, y1))
-    elif i == 1:
-        # Sector 1: Left half = 1x1 square + 2x1 rectangle
-        parcels.append((x0, y0, x0 + 256, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 512, y1))
-        # Right half = four 256x256 squares
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-        parcels.append((x0 + 768, y0, x1, y0 + 256))
-        parcels.append((x0 + 768, y0 + 256, x1, y1))
-    elif i == 2:
-        # Sector 2: Left half = 1x1 square + 2x1 rectangle
-        parcels.append((x0, y0, x0 + 256, y0 + 256))
-        parcels.append((x0, y0 + 256, x0 + 512, y1))
-        # Right half = four 256x256 squares
-        parcels.append((x0 + 512, y0, x0 + 768, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x0 + 768, y1))
-        parcels.append((x0 + 768, y0, x1, y0 + 256))
-        parcels.append((x0 + 768, y0 + 256, x1, y1))
-    elif i == 3:
-        # Sector 3: Left half = two 1x1 squares
-        parcels.append((x0 + 256, y0, x0 + 512, y0 + 256))
-        parcels.append((x0 + 256, y0 + 256, x0 + 512, y1))
-        # Right half = two 2x1 rectangles
-        parcels.append((x0 + 512, y0, x1, y0 + 256))
-        parcels.append((x0 + 512, y0 + 256, x1, y1))
+build_southern_strip(parcels)
 
 # --- Geometries with GAP adjustments ---
-TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1 = m(1), m(2), m(0.5), m(1)
-
-forests = [
-    (0, 0, S, 10),
-    (0, S - 10, S, S),
-    (0, 0, 10, S),
-    (S - 10, 0, S, S)
-]
 
 diag_forests = []
-
-yards = [
-    # Main farmyard (Southeast)
-    (3088, 3607, 3316, 4076),
-    # Main farmyard (Northwest)
-    (780, 24, 1008, 489),
-    # Northern road industrial zones (West, Mid-West, Mid-East) in field corners
-    (1292, 268, 1524, 489),
-    (2316, 268, 2548, 489),
-    (3340, 268, 3572, 489),
-    # Southern road industrial zones (West, Mid-West, Mid-East) in field corners
-    (268, 3607, 500, 3828),
-    (1292, 3607, 1524, 3828),
-    (2316, 3607, 2548, 3828)
-]
 
 num_forest_steps = 240
 for i in range(num_forest_steps):
@@ -266,36 +126,29 @@ for i in range(num_forest_steps):
     y1 = m(0.5 + (i + 1) * (2.5 / num_forest_steps))
     ym = (y0 + y1) / 2
     xc = get_road_x(ym)
-    x0 = max(35.0, xc - 350.0)
-    x1 = min(S - 35.0, xc + 350.0)
+    x0 = max(BORDER, xc - 350.0)
+    x1 = min(S - BORDER, xc + 350.0)
     diag_forests.append((x0, y0, x1, y1))
-
-def find_intersection_y(target_x):
-    low = m(0.5)
-    high = m(3.5)
-    for _ in range(20):
-        mid = (low + high) / 2
-        x = get_road_x(mid)
-        if x > target_x:
-            low = mid
-        else:
-            high = mid
-    return mid
 
 # --- Farmland Clipping Geometry ---
 clips = []
-# 35m unassigned border clip (includes forest from 0 to 10 and black strip from 10 to 35)
-clips.append((0, 0, S, 35))
-clips.append((0, S - 35, S, S))
-clips.append((0, 0, 35, S))
-clips.append((S - 35, 0, S, S))
+# 25m unassigned border clip (plain empty margin, no perimeter forest)
+clips.append((0, 0, S, BORDER))
+clips.append((0, S - BORDER, S, S))
+clips.append((0, 0, BORDER, S))
+clips.append((S - BORDER, 0, S, S))
 
-clips.append((m(1.0), m(0.5), m(1.625), m(1.0))) # Town residential clip
+clips.append((TOWN_X0, TOWN_Y0, TOWN_X1, TOWN_Y1)) # Town residential clip
 
-for f in forests:
-    clips.append(f)
 for y in yards:
     clips.append(y)
+
+# Clip fields inside the bounding box of the new irregular forest
+min_x = min(p[0] for p in IRREGULAR_FOREST_PTS)
+max_x = max(p[0] for p in IRREGULAR_FOREST_PTS)
+min_y = min(p[1] for p in IRREGULAR_FOREST_PTS)
+max_y = max(p[1] for p in IRREGULAR_FOREST_PTS)
+clips.append((min_x - 12, min_y - 12, max_x + 12, max_y + 12))
 
 # Set up road coordinates
 hlines = [512, 1024, 2048, 3584]
@@ -314,6 +167,9 @@ for k in range(1, MILES):
 # Add southern track footprints to clips
 hw_track = TH_T/2 + W_ROAD_BORDER
 clips.append((2445 - hw_track, 2048 - hw_track, 2445 + hw_track, 3584 + hw_track))
+
+# Add new western track footprints to clips
+clips.append((512 - hw_track, 2048 - hw_track, 512 + hw_track, 3584 + hw_track))
 
 
 def subtract_single(A, B):
@@ -449,73 +305,56 @@ for p in parcels:
 
 # Southern zone fields removed
 
-# ================= Column 4 Row 2 Circular Field in OSM =================
-cx = 3072 + 512
-cy = 1024 + 512
-R = 472
-pts = []
-# Generate circle approximation (32 nodes)
-for k in range(32):
-    theta = k * 2 * math.pi / 32
-    x = cx + R * math.cos(theta)
-    y = cy + R * math.sin(theta)
-    pts.append((x, y))
-ns = [create_unique_node(x, y) for (x, y) in pts]
-ns.append(ns[0])
-add_way(ns, {'landuse': 'farmland'})
+# Column 4 Row 2 fields are generated with the parcels above (clipped by the forest)
 
 # ================= 2. TOWN =================
 
 town_nodes = [
-    create_unique_node(m(1.0), m(0.5)),
-    create_unique_node(m(1.625), m(0.5)),
-    create_unique_node(m(1.625), m(1.0)),
-    create_unique_node(m(1.0), m(1.0)),
+    create_unique_node(TOWN_X0, TOWN_Y0),
+    create_unique_node(TOWN_X1, TOWN_Y0),
+    create_unique_node(TOWN_X1, TOWN_Y1),
+    create_unique_node(TOWN_X0, TOWN_Y1),
 ]
 town_nodes.append(town_nodes[0])
 add_way(town_nodes, {'landuse': 'residential'})
 
 # Town streets
-for i in range(1, 7):
-    x = TOWN_X0 + i * 100
-    pts = [TOWN_Y0 + 10] + [TOWN_Y0 + j * 100 for j in range(1, 5)] + [m(1.0)]
+for i in range(1, TOWN_VSTREETS + 1):
+    x = TOWN_X0 + i * TOWN_STREET_SPACING
+    pts = [TOWN_Y0 + 10] + [TOWN_Y0 + j * TOWN_STREET_SPACING for j in range(1, TOWN_HSTREETS + 1)] + [TOWN_Y1]
     ns = [get_node(x, y_val) for y_val in pts]
     add_way(ns, {'highway': 'secondary'})
 
-for j in range(1, 5):
-    y = TOWN_Y0 + j * 100
-    pts = [TOWN_X0 + 10] + [TOWN_X0 + i * 100 for i in range(1, 7)] + [m(1.625)]
+for j in range(1, TOWN_HSTREETS + 1):
+    y = TOWN_Y0 + j * TOWN_STREET_SPACING
+    pts = [TOWN_X0 + 10] + [TOWN_X0 + i * TOWN_STREET_SPACING for i in range(1, TOWN_VSTREETS + 1)] + [TOWN_X1]
     ns = [get_node(x_val, y) for x_val in pts]
     add_way(ns, {'highway': 'secondary'})
 
 # ================= 3. FORESTS =================
-
-for (x0, y0, x1, y1) in forests:
-    ns = [
-        create_unique_node(x0, y0),
-        create_unique_node(x1, y0),
-        create_unique_node(x1, y1),
-        create_unique_node(x0, y1),
-    ]
-    ns.append(ns[0])
-    add_way(ns, {'landuse': 'forest'})
+# Perimeter forest ring removed: only the diagonal forest remains.
 
 # Single curved forest polygon for OSM
 forest_nodes = []
 # Right side: from top to bottom (y = m(0.5) to m(3.5))
 for y_px in range(int(m(0.5)), int(m(3.5)) + 1, 32):
     xc = get_road_x(y_px)
-    xr = min(S - 35.0, xc + 318.0)
+    xr = min(S - BORDER, xc + 318.0)
     forest_nodes.append(create_unique_node(xr, y_px))
 
 # Left side: from bottom to top (y = m(3.5) to m(0.5))
 for y_px in range(int(m(3.5)), int(m(0.5)) - 1, -32):
     xc = get_road_x(y_px)
-    xl = max(35.0, xc - 318.0)
+    xl = max(BORDER, xc - 318.0)
     forest_nodes.append(create_unique_node(xl, y_px))
 
 forest_nodes.append(forest_nodes[0])
 add_way(forest_nodes, {'natural': 'wood', 'name': 'Bosque de la Diagonal'})
+
+# New irregular forest in Column 1 Row 3 (near the equator)
+irr_forest_nodes = [create_unique_node(x, y) for (x, y) in IRREGULAR_FOREST_PTS]
+irr_forest_nodes.append(irr_forest_nodes[0])
+add_way(irr_forest_nodes, {'natural': 'wood', 'landuse': 'farmyard', 'name': 'Bosque de la Colina'})
 
 # ================= 4. FARMYARDS =================
 
@@ -572,6 +411,13 @@ south_vertical_track = [
     get_node(2445, 3584)
 ]
 add_way(south_vertical_track, {'highway': 'track', 'name': 'Camino de Terracería del Sur'})
+
+# Western track roads
+west_vertical_track = [
+    get_node(512, 2048),
+    get_node(512, 3584)
+]
+add_way(west_vertical_track, {'highway': 'track', 'name': 'Camino del Oeste'})
 
 
 # ================= 9. BUILD OSM XML =================
