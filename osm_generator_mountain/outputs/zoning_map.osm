@@ -1,0 +1,1061 @@
+<?xml version="1.0" ?>
+<osm version="0.6" generator="osm_generator_py">
+  <bounds minlat="27.061491919529107" minlon="-109.7277558150625" maxlat="27.098328080470893" maxlon="-109.6863841849375"/>
+  <node id="1" lat="27.09804929" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="2" lat="27.09804929" lon="-109.72264496" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="3" lat="27.09607978" lon="-109.72264496" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="4" lat="27.09607978" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="5" lat="27.09597186" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="6" lat="27.09597186" lon="-109.72264496" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="7" lat="27.09398436" lon="-109.72264496" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="8" lat="27.09398436" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="9" lat="27.09804929" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="10" lat="27.09804929" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="11" lat="27.09607978" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="12" lat="27.09607978" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="13" lat="27.09597186" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="14" lat="27.09597186" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="15" lat="27.09398436" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="16" lat="27.09398436" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="17" lat="27.09804929" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="18" lat="27.09804929" lon="-109.71230206" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="19" lat="27.09607978" lon="-109.71230206" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="20" lat="27.09607978" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="21" lat="27.09597186" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="22" lat="27.09597186" lon="-109.71488778" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="23" lat="27.09398436" lon="-109.71488778" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="24" lat="27.09398436" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="25" lat="27.09804929" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="26" lat="27.09804929" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="27" lat="27.09607978" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="28" lat="27.09607978" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="29" lat="27.09597186" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="30" lat="27.09597186" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="31" lat="27.09398436" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="32" lat="27.09398436" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="33" lat="27.09804929" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="34" lat="27.09804929" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="35" lat="27.09607978" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="36" lat="27.09607978" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="37" lat="27.09597186" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="38" lat="27.09597186" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="39" lat="27.09398436" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="40" lat="27.09398436" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="41" lat="27.09804929" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="42" lat="27.09804929" lon="-109.70195915" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="43" lat="27.09607978" lon="-109.70195915" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="44" lat="27.09607978" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="45" lat="27.09597186" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="46" lat="27.09597186" lon="-109.70454488" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="47" lat="27.09398436" lon="-109.70454488" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="48" lat="27.09398436" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="49" lat="27.09804929" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="50" lat="27.09804929" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="51" lat="27.09607978" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="52" lat="27.09607978" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="53" lat="27.09597186" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="54" lat="27.09597186" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="55" lat="27.09398436" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="56" lat="27.09398436" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="57" lat="27.09804929" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="58" lat="27.09804929" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="59" lat="27.09607978" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="60" lat="27.09607978" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="61" lat="27.09597186" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="62" lat="27.09597186" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="63" lat="27.09398436" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="64" lat="27.09398436" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="65" lat="27.09804929" lon="-109.69666649" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="66" lat="27.09804929" lon="-109.69161624" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="67" lat="27.09607978" lon="-109.69161624" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="68" lat="27.09607978" lon="-109.69666649" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="69" lat="27.09597186" lon="-109.69666649" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="70" lat="27.09597186" lon="-109.69420197" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="71" lat="27.09398436" lon="-109.69420197" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="72" lat="27.09398436" lon="-109.69666649" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="73" lat="27.09804929" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="74" lat="27.09804929" lon="-109.68903051" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="75" lat="27.09607978" lon="-109.68903051" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="76" lat="27.09607978" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="77" lat="27.09597186" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="78" lat="27.09597186" lon="-109.68903051" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="79" lat="27.09398436" lon="-109.68903051" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="80" lat="27.09398436" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="81" lat="27.09804929" lon="-109.68890931" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="82" lat="27.09804929" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="83" lat="27.09607978" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="84" lat="27.09607978" lon="-109.68890931" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="85" lat="27.09597186" lon="-109.68890931" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="86" lat="27.09597186" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="87" lat="27.09398436" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="88" lat="27.09398436" lon="-109.68890931" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="89" lat="27.06583564" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="90" lat="27.06583564" lon="-109.72523069" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="91" lat="27.06384814" lon="-109.72523069" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="92" lat="27.06384814" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="93" lat="27.06374022" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="94" lat="27.06374022" lon="-109.72264496" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="95" lat="27.06177071" lon="-109.72264496" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="96" lat="27.06177071" lon="-109.72744270" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="97" lat="27.06583564" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="98" lat="27.06583564" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="99" lat="27.06384814" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="100" lat="27.06384814" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="101" lat="27.06374022" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="102" lat="27.06374022" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="103" lat="27.06177071" lon="-109.72005924" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="104" lat="27.06177071" lon="-109.72252376" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="105" lat="27.06583564" lon="-109.71993803" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="106" lat="27.06583564" lon="-109.71747351" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="107" lat="27.06384814" lon="-109.71747351" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="108" lat="27.06384814" lon="-109.71993803" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="109" lat="27.06374022" lon="-109.71993803" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="110" lat="27.06374022" lon="-109.71747351" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="111" lat="27.06177071" lon="-109.71747351" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="112" lat="27.06177071" lon="-109.71993803" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="113" lat="27.06583564" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="114" lat="27.06583564" lon="-109.71488778" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="115" lat="27.06384814" lon="-109.71488778" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="116" lat="27.06384814" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="117" lat="27.06374022" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="118" lat="27.06374022" lon="-109.71230206" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="119" lat="27.06177071" lon="-109.71230206" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="120" lat="27.06177071" lon="-109.71735230" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="121" lat="27.06583564" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="122" lat="27.06583564" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="123" lat="27.06384814" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="124" lat="27.06384814" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="125" lat="27.06374022" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="126" lat="27.06374022" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="127" lat="27.06177071" lon="-109.70971633" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="128" lat="27.06177071" lon="-109.71218085" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="129" lat="27.06583564" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="130" lat="27.06583564" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="131" lat="27.06384814" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="132" lat="27.06384814" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="133" lat="27.06374022" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="134" lat="27.06374022" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="135" lat="27.06177071" lon="-109.70713060" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="136" lat="27.06177071" lon="-109.70959512" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="137" lat="27.06583564" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="138" lat="27.06583564" lon="-109.70454488" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="139" lat="27.06384814" lon="-109.70454488" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="140" lat="27.06384814" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="141" lat="27.06374022" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="142" lat="27.06374022" lon="-109.70195915" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="143" lat="27.06177071" lon="-109.70195915" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="144" lat="27.06177071" lon="-109.70700940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="145" lat="27.06583564" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="146" lat="27.06583564" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="147" lat="27.06384814" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="148" lat="27.06384814" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="149" lat="27.06374022" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="150" lat="27.06374022" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="151" lat="27.06177071" lon="-109.69937342" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="152" lat="27.06177071" lon="-109.70183794" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="153" lat="27.06583564" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="154" lat="27.06583564" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="155" lat="27.06384814" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="156" lat="27.06384814" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="157" lat="27.06374022" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="158" lat="27.06374022" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="159" lat="27.06177071" lon="-109.69678770" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="160" lat="27.06177071" lon="-109.69925222" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="161" lat="27.06583564" lon="-109.69408076" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="162" lat="27.06583564" lon="-109.69161624" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="163" lat="27.06384814" lon="-109.69161624" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="164" lat="27.06384814" lon="-109.69408076" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="165" lat="27.06374022" lon="-109.69408076" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="166" lat="27.06374022" lon="-109.69161624" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="167" lat="27.06177071" lon="-109.69161624" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="168" lat="27.06177071" lon="-109.69408076" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="169" lat="27.06583564" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="170" lat="27.06583564" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="171" lat="27.06384814" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="172" lat="27.06384814" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="173" lat="27.06374022" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="174" lat="27.06374022" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="175" lat="27.06177071" lon="-109.68669730" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="176" lat="27.06177071" lon="-109.69149504" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="177" lat="27.09372356" lon="-109.71741291" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="178" lat="27.09372356" lon="-109.71418075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="179" lat="27.08911904" lon="-109.71418075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="180" lat="27.08911904" lon="-109.71741291" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="181" lat="27.09363363" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="182" lat="27.09282424" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="183" lat="27.09192492" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="184" lat="27.09102560" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="185" lat="27.09012628" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="186" lat="27.08911904" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="187" lat="27.09363363" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="188" lat="27.09282424" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="189" lat="27.09192492" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="190" lat="27.09102560" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="191" lat="27.09012628" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="192" lat="27.08911904" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="193" lat="27.09363363" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="194" lat="27.09282424" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="195" lat="27.09192492" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="196" lat="27.09102560" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="197" lat="27.09012628" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="198" lat="27.08911904" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="199" lat="27.09282424" lon="-109.71731190" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="200" lat="27.09282424" lon="-109.71418075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="201" lat="27.09192492" lon="-109.71731190" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="202" lat="27.09192492" lon="-109.71418075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="203" lat="27.09102560" lon="-109.71731190" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="204" lat="27.09102560" lon="-109.71418075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="205" lat="27.09012628" lon="-109.71731190" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="206" lat="27.09012628" lon="-109.71418075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="207" lat="27.06588960" lon="-109.69656548" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="208" lat="27.06588960" lon="-109.69426257" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="209" lat="27.06167178" lon="-109.69426257" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="210" lat="27.06167178" lon="-109.69656548" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="211" lat="27.09811224" lon="-109.71987743" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="212" lat="27.09811224" lon="-109.71757452" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="213" lat="27.09393040" lon="-109.71757452" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="214" lat="27.09393040" lon="-109.71987743" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="215" lat="27.09591790" lon="-109.71470597" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="216" lat="27.09591790" lon="-109.71236266" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="217" lat="27.09393040" lon="-109.71236266" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="218" lat="27.09393040" lon="-109.71470597" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="219" lat="27.09591790" lon="-109.70436307" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="220" lat="27.09591790" lon="-109.70201975" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="221" lat="27.09393040" lon="-109.70201975" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="222" lat="27.09393040" lon="-109.70436307" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="223" lat="27.09591790" lon="-109.69402016" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="224" lat="27.09591790" lon="-109.69167684" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="225" lat="27.09393040" lon="-109.69167684" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="226" lat="27.09393040" lon="-109.69402016" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="227" lat="27.06588960" lon="-109.72504888" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="228" lat="27.06588960" lon="-109.72270557" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="229" lat="27.06390210" lon="-109.72270557" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="230" lat="27.06390210" lon="-109.72504888" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="231" lat="27.06588960" lon="-109.71470597" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="232" lat="27.06588960" lon="-109.71236266" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="233" lat="27.06390210" lon="-109.71236266" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="234" lat="27.06390210" lon="-109.71470597" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="235" lat="27.06588960" lon="-109.70436307" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="236" lat="27.06588960" lon="-109.70201975" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="237" lat="27.06390210" lon="-109.70201975" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="238" lat="27.06390210" lon="-109.70436307" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="239" lat="27.08035966" lon="-109.72725079" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="240" lat="27.08035975" lon="-109.72624074" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="241" lat="27.08036029" lon="-109.72523069" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="242" lat="27.08036200" lon="-109.72422064" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="243" lat="27.08036596" lon="-109.72321059" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="244" lat="27.08037351" lon="-109.72220054" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="245" lat="27.08038628" lon="-109.72119049" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="246" lat="27.08040624" lon="-109.72018044" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="247" lat="27.08043529" lon="-109.71917039" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="248" lat="27.08047567" lon="-109.71816034" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="249" lat="27.08052936" lon="-109.71715029" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="250" lat="27.08059852" lon="-109.71614025" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="251" lat="27.08068521" lon="-109.71513020" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="252" lat="27.08079124" lon="-109.71412015" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="253" lat="27.08091823" lon="-109.71311010" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="254" lat="27.08106734" lon="-109.71210005" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="255" lat="27.08123965" lon="-109.71109000" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="256" lat="27.08143561" lon="-109.71007995" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="257" lat="27.08165522" lon="-109.70906990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="258" lat="27.08189831" lon="-109.70805985" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="259" lat="27.08216379" lon="-109.70704980" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="260" lat="27.08245040" lon="-109.70603975" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="261" lat="27.08275626" lon="-109.70502970" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="262" lat="27.08307894" lon="-109.70401965" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="263" lat="27.08341564" lon="-109.70300960" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="264" lat="27.08376314" lon="-109.70199955" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="265" lat="27.08411783" lon="-109.70098950" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="266" lat="27.08447585" lon="-109.69997945" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="267" lat="27.08483306" lon="-109.69896940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="268" lat="27.08518514" lon="-109.69795935" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="269" lat="27.08552769" lon="-109.69694930" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="270" lat="27.08585613" lon="-109.69593925" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="271" lat="27.08616630" lon="-109.69492920" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="272" lat="27.08645390" lon="-109.69391915" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="273" lat="27.08671507" lon="-109.69290911" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="274" lat="27.08694592" lon="-109.69189906" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="275" lat="27.08714341" lon="-109.69088901" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="276" lat="27.08730457" lon="-109.68987896" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="277" lat="27.08742715" lon="-109.68886891" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="278" lat="27.08750926" lon="-109.68785886" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="279" lat="27.08754892" lon="-109.68688921" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="280" lat="27.08125367" lon="-109.68688921" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="281" lat="27.08121401" lon="-109.68785886" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="282" lat="27.08113191" lon="-109.68886891" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="283" lat="27.08100933" lon="-109.68987896" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="284" lat="27.08084817" lon="-109.69088901" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="285" lat="27.08065068" lon="-109.69189906" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="286" lat="27.08041982" lon="-109.69290911" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="287" lat="27.08015866" lon="-109.69391915" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="288" lat="27.07987106" lon="-109.69492920" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="289" lat="27.07956088" lon="-109.69593925" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="290" lat="27.07923245" lon="-109.69694930" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="291" lat="27.07888990" lon="-109.69795935" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="292" lat="27.07853782" lon="-109.69896940" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="293" lat="27.07818061" lon="-109.69997945" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="294" lat="27.07782259" lon="-109.70098950" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="295" lat="27.07746790" lon="-109.70199955" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="296" lat="27.07712040" lon="-109.70300960" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="297" lat="27.07678369" lon="-109.70401965" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="298" lat="27.07646102" lon="-109.70502970" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="299" lat="27.07615516" lon="-109.70603975" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="300" lat="27.07586854" lon="-109.70704980" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="301" lat="27.07560306" lon="-109.70805985" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="302" lat="27.07535998" lon="-109.70906990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="303" lat="27.07514036" lon="-109.71007995" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="304" lat="27.07494440" lon="-109.71109000" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="305" lat="27.07477209" lon="-109.71210005" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="306" lat="27.07462299" lon="-109.71311010" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="307" lat="27.07449600" lon="-109.71412015" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="308" lat="27.07438997" lon="-109.71513020" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="309" lat="27.07430328" lon="-109.71614025" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="310" lat="27.07423412" lon="-109.71715029" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="311" lat="27.07418043" lon="-109.71816034" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="312" lat="27.07414005" lon="-109.71917039" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="313" lat="27.07411100" lon="-109.72018044" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="314" lat="27.07409104" lon="-109.72119049" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="315" lat="27.07407827" lon="-109.72220054" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="316" lat="27.07407071" lon="-109.72321059" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="317" lat="27.07406676" lon="-109.72422064" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="318" lat="27.07406505" lon="-109.72523069" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="319" lat="27.07406451" lon="-109.72624074" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="320" lat="27.07406442" lon="-109.72725079" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="321" lat="27.09372356" lon="-109.72775582" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="322" lat="27.09372356" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="323" lat="27.09372356" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="324" lat="27.09372356" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="325" lat="27.09372356" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="326" lat="27.09372356" lon="-109.68638418" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="327" lat="27.06609644" lon="-109.72775582" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="328" lat="27.06609644" lon="-109.71640286" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="329" lat="27.06609644" lon="-109.71539281" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="330" lat="27.06609644" lon="-109.71438276" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="331" lat="27.06609644" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="332" lat="27.06609644" lon="-109.68638418" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="333" lat="27.09331244" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="334" lat="27.09290132" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="335" lat="27.09249021" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="336" lat="27.09207909" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="337" lat="27.09166797" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="338" lat="27.09125685" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="339" lat="27.09084574" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="340" lat="27.09043462" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="341" lat="27.09002350" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="342" lat="27.08961238" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="343" lat="27.08920126" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="344" lat="27.08879015" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="345" lat="27.08837903" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="346" lat="27.08796791" lon="-109.71308990" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="347" lat="27.08754470" lon="-109.71278235" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="348" lat="27.08712149" lon="-109.71195664" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="349" lat="27.08669828" lon="-109.71075814" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="350" lat="27.08627507" lon="-109.70933223" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="351" lat="27.08585186" lon="-109.70782430" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="352" lat="27.08542865" lon="-109.70637971" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="353" lat="27.08500544" lon="-109.70514385" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="354" lat="27.08458223" lon="-109.70426210" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="355" lat="27.08415902" lon="-109.70387410" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="356" lat="27.08373581" lon="-109.70398742" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="357" lat="27.08331260" lon="-109.70447759" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="358" lat="27.08288940" lon="-109.70521437" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="359" lat="27.08246619" lon="-109.70606754" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="360" lat="27.08204298" lon="-109.70690688" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="361" lat="27.08161977" lon="-109.70760216" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="362" lat="27.08119656" lon="-109.70802316" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="363" lat="27.08077335" lon="-109.70803965" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="364" lat="27.08035014" lon="-109.70755800" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="365" lat="27.07992693" lon="-109.70663096" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="366" lat="27.07950372" lon="-109.70534788" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="367" lat="27.07908051" lon="-109.70379809" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="368" lat="27.07865730" lon="-109.70207094" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="369" lat="27.07823409" lon="-109.70025577" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="370" lat="27.07781088" lon="-109.69844192" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="371" lat="27.07738767" lon="-109.69671873" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="372" lat="27.07696446" lon="-109.69517348" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="373" lat="27.07654125" lon="-109.69384581" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="374" lat="27.07611804" lon="-109.69272775" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="375" lat="27.07569483" lon="-109.69180926" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="376" lat="27.07527162" lon="-109.69108030" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="377" lat="27.07484841" lon="-109.69053081" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="378" lat="27.07442520" lon="-109.69015075" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="379" lat="27.07400199" lon="-109.68993008" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="380" lat="27.07357878" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="381" lat="27.07304433" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="382" lat="27.07250988" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="383" lat="27.07197543" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="384" lat="27.07144097" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="385" lat="27.07090652" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="386" lat="27.07037207" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="387" lat="27.06983761" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="388" lat="27.06930316" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="389" lat="27.06876871" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="390" lat="27.06823425" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="391" lat="27.06769980" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="392" lat="27.06716535" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <node id="393" lat="27.06663089" lon="-109.68985876" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z"/>
+  <way id="1" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <nd ref="4"/>
+    <nd ref="1"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="2" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="5"/>
+    <nd ref="6"/>
+    <nd ref="7"/>
+    <nd ref="8"/>
+    <nd ref="5"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="3" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="9"/>
+    <nd ref="10"/>
+    <nd ref="11"/>
+    <nd ref="12"/>
+    <nd ref="9"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="4" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="13"/>
+    <nd ref="14"/>
+    <nd ref="15"/>
+    <nd ref="16"/>
+    <nd ref="13"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="5" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="17"/>
+    <nd ref="18"/>
+    <nd ref="19"/>
+    <nd ref="20"/>
+    <nd ref="17"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="6" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="21"/>
+    <nd ref="22"/>
+    <nd ref="23"/>
+    <nd ref="24"/>
+    <nd ref="21"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="7" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="25"/>
+    <nd ref="26"/>
+    <nd ref="27"/>
+    <nd ref="28"/>
+    <nd ref="25"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="8" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="29"/>
+    <nd ref="30"/>
+    <nd ref="31"/>
+    <nd ref="32"/>
+    <nd ref="29"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="9" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="33"/>
+    <nd ref="34"/>
+    <nd ref="35"/>
+    <nd ref="36"/>
+    <nd ref="33"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="10" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="37"/>
+    <nd ref="38"/>
+    <nd ref="39"/>
+    <nd ref="40"/>
+    <nd ref="37"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="11" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="41"/>
+    <nd ref="42"/>
+    <nd ref="43"/>
+    <nd ref="44"/>
+    <nd ref="41"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="12" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="45"/>
+    <nd ref="46"/>
+    <nd ref="47"/>
+    <nd ref="48"/>
+    <nd ref="45"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="13" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="49"/>
+    <nd ref="50"/>
+    <nd ref="51"/>
+    <nd ref="52"/>
+    <nd ref="49"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="14" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="53"/>
+    <nd ref="54"/>
+    <nd ref="55"/>
+    <nd ref="56"/>
+    <nd ref="53"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="15" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="57"/>
+    <nd ref="58"/>
+    <nd ref="59"/>
+    <nd ref="60"/>
+    <nd ref="57"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="16" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="61"/>
+    <nd ref="62"/>
+    <nd ref="63"/>
+    <nd ref="64"/>
+    <nd ref="61"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="17" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="65"/>
+    <nd ref="66"/>
+    <nd ref="67"/>
+    <nd ref="68"/>
+    <nd ref="65"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="18" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="69"/>
+    <nd ref="70"/>
+    <nd ref="71"/>
+    <nd ref="72"/>
+    <nd ref="69"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="19" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="73"/>
+    <nd ref="74"/>
+    <nd ref="75"/>
+    <nd ref="76"/>
+    <nd ref="73"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="20" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="77"/>
+    <nd ref="78"/>
+    <nd ref="79"/>
+    <nd ref="80"/>
+    <nd ref="77"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="21" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="81"/>
+    <nd ref="82"/>
+    <nd ref="83"/>
+    <nd ref="84"/>
+    <nd ref="81"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="22" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="85"/>
+    <nd ref="86"/>
+    <nd ref="87"/>
+    <nd ref="88"/>
+    <nd ref="85"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="23" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="89"/>
+    <nd ref="90"/>
+    <nd ref="91"/>
+    <nd ref="92"/>
+    <nd ref="89"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="24" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="93"/>
+    <nd ref="94"/>
+    <nd ref="95"/>
+    <nd ref="96"/>
+    <nd ref="93"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="25" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="97"/>
+    <nd ref="98"/>
+    <nd ref="99"/>
+    <nd ref="100"/>
+    <nd ref="97"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="26" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="101"/>
+    <nd ref="102"/>
+    <nd ref="103"/>
+    <nd ref="104"/>
+    <nd ref="101"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="27" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="105"/>
+    <nd ref="106"/>
+    <nd ref="107"/>
+    <nd ref="108"/>
+    <nd ref="105"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="28" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="109"/>
+    <nd ref="110"/>
+    <nd ref="111"/>
+    <nd ref="112"/>
+    <nd ref="109"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="29" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="113"/>
+    <nd ref="114"/>
+    <nd ref="115"/>
+    <nd ref="116"/>
+    <nd ref="113"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="30" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="117"/>
+    <nd ref="118"/>
+    <nd ref="119"/>
+    <nd ref="120"/>
+    <nd ref="117"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="31" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="121"/>
+    <nd ref="122"/>
+    <nd ref="123"/>
+    <nd ref="124"/>
+    <nd ref="121"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="32" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="125"/>
+    <nd ref="126"/>
+    <nd ref="127"/>
+    <nd ref="128"/>
+    <nd ref="125"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="33" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="129"/>
+    <nd ref="130"/>
+    <nd ref="131"/>
+    <nd ref="132"/>
+    <nd ref="129"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="34" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="133"/>
+    <nd ref="134"/>
+    <nd ref="135"/>
+    <nd ref="136"/>
+    <nd ref="133"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="35" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="137"/>
+    <nd ref="138"/>
+    <nd ref="139"/>
+    <nd ref="140"/>
+    <nd ref="137"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="36" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="141"/>
+    <nd ref="142"/>
+    <nd ref="143"/>
+    <nd ref="144"/>
+    <nd ref="141"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="37" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="145"/>
+    <nd ref="146"/>
+    <nd ref="147"/>
+    <nd ref="148"/>
+    <nd ref="145"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="38" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="149"/>
+    <nd ref="150"/>
+    <nd ref="151"/>
+    <nd ref="152"/>
+    <nd ref="149"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="39" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="153"/>
+    <nd ref="154"/>
+    <nd ref="155"/>
+    <nd ref="156"/>
+    <nd ref="153"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="40" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="157"/>
+    <nd ref="158"/>
+    <nd ref="159"/>
+    <nd ref="160"/>
+    <nd ref="157"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="41" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="161"/>
+    <nd ref="162"/>
+    <nd ref="163"/>
+    <nd ref="164"/>
+    <nd ref="161"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="42" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="165"/>
+    <nd ref="166"/>
+    <nd ref="167"/>
+    <nd ref="168"/>
+    <nd ref="165"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="43" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="169"/>
+    <nd ref="170"/>
+    <nd ref="171"/>
+    <nd ref="172"/>
+    <nd ref="169"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="44" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="173"/>
+    <nd ref="174"/>
+    <nd ref="175"/>
+    <nd ref="176"/>
+    <nd ref="173"/>
+    <tag k="landuse" v="farmland"/>
+  </way>
+  <way id="45" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="177"/>
+    <nd ref="178"/>
+    <nd ref="179"/>
+    <nd ref="180"/>
+    <nd ref="177"/>
+    <tag k="landuse" v="residential"/>
+  </way>
+  <way id="46" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="181"/>
+    <nd ref="182"/>
+    <nd ref="183"/>
+    <nd ref="184"/>
+    <nd ref="185"/>
+    <nd ref="186"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="47" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="187"/>
+    <nd ref="188"/>
+    <nd ref="189"/>
+    <nd ref="190"/>
+    <nd ref="191"/>
+    <nd ref="192"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="48" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="193"/>
+    <nd ref="194"/>
+    <nd ref="195"/>
+    <nd ref="196"/>
+    <nd ref="197"/>
+    <nd ref="198"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="49" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="199"/>
+    <nd ref="182"/>
+    <nd ref="188"/>
+    <nd ref="194"/>
+    <nd ref="200"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="50" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="201"/>
+    <nd ref="183"/>
+    <nd ref="189"/>
+    <nd ref="195"/>
+    <nd ref="202"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="51" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="203"/>
+    <nd ref="184"/>
+    <nd ref="190"/>
+    <nd ref="196"/>
+    <nd ref="204"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="52" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="205"/>
+    <nd ref="185"/>
+    <nd ref="191"/>
+    <nd ref="197"/>
+    <nd ref="206"/>
+    <tag k="highway" v="secondary"/>
+  </way>
+  <way id="53" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="207"/>
+    <nd ref="208"/>
+    <nd ref="209"/>
+    <nd ref="210"/>
+    <nd ref="207"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="54" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="211"/>
+    <nd ref="212"/>
+    <nd ref="213"/>
+    <nd ref="214"/>
+    <nd ref="211"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="55" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="215"/>
+    <nd ref="216"/>
+    <nd ref="217"/>
+    <nd ref="218"/>
+    <nd ref="215"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="56" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="219"/>
+    <nd ref="220"/>
+    <nd ref="221"/>
+    <nd ref="222"/>
+    <nd ref="219"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="57" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="223"/>
+    <nd ref="224"/>
+    <nd ref="225"/>
+    <nd ref="226"/>
+    <nd ref="223"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="58" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="227"/>
+    <nd ref="228"/>
+    <nd ref="229"/>
+    <nd ref="230"/>
+    <nd ref="227"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="59" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="231"/>
+    <nd ref="232"/>
+    <nd ref="233"/>
+    <nd ref="234"/>
+    <nd ref="231"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="60" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="235"/>
+    <nd ref="236"/>
+    <nd ref="237"/>
+    <nd ref="238"/>
+    <nd ref="235"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="building" v="industrial"/>
+  </way>
+  <way id="61" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="239"/>
+    <nd ref="240"/>
+    <nd ref="241"/>
+    <nd ref="242"/>
+    <nd ref="243"/>
+    <nd ref="244"/>
+    <nd ref="245"/>
+    <nd ref="246"/>
+    <nd ref="247"/>
+    <nd ref="248"/>
+    <nd ref="249"/>
+    <nd ref="250"/>
+    <nd ref="251"/>
+    <nd ref="252"/>
+    <nd ref="253"/>
+    <nd ref="254"/>
+    <nd ref="255"/>
+    <nd ref="256"/>
+    <nd ref="257"/>
+    <nd ref="258"/>
+    <nd ref="259"/>
+    <nd ref="260"/>
+    <nd ref="261"/>
+    <nd ref="262"/>
+    <nd ref="263"/>
+    <nd ref="264"/>
+    <nd ref="265"/>
+    <nd ref="266"/>
+    <nd ref="267"/>
+    <nd ref="268"/>
+    <nd ref="269"/>
+    <nd ref="270"/>
+    <nd ref="271"/>
+    <nd ref="272"/>
+    <nd ref="273"/>
+    <nd ref="274"/>
+    <nd ref="275"/>
+    <nd ref="276"/>
+    <nd ref="277"/>
+    <nd ref="278"/>
+    <nd ref="279"/>
+    <nd ref="280"/>
+    <nd ref="281"/>
+    <nd ref="282"/>
+    <nd ref="283"/>
+    <nd ref="284"/>
+    <nd ref="285"/>
+    <nd ref="286"/>
+    <nd ref="287"/>
+    <nd ref="288"/>
+    <nd ref="289"/>
+    <nd ref="290"/>
+    <nd ref="291"/>
+    <nd ref="292"/>
+    <nd ref="293"/>
+    <nd ref="294"/>
+    <nd ref="295"/>
+    <nd ref="296"/>
+    <nd ref="297"/>
+    <nd ref="298"/>
+    <nd ref="299"/>
+    <nd ref="300"/>
+    <nd ref="301"/>
+    <nd ref="302"/>
+    <nd ref="303"/>
+    <nd ref="304"/>
+    <nd ref="305"/>
+    <nd ref="306"/>
+    <nd ref="307"/>
+    <nd ref="308"/>
+    <nd ref="309"/>
+    <nd ref="310"/>
+    <nd ref="311"/>
+    <nd ref="312"/>
+    <nd ref="313"/>
+    <nd ref="314"/>
+    <nd ref="315"/>
+    <nd ref="316"/>
+    <nd ref="317"/>
+    <nd ref="318"/>
+    <nd ref="319"/>
+    <nd ref="320"/>
+    <nd ref="239"/>
+    <tag k="natural" v="wood"/>
+    <tag k="landuse" v="farmyard"/>
+    <tag k="name" v="Bosque de la Meseta"/>
+  </way>
+  <way id="62" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="321"/>
+    <nd ref="322"/>
+    <nd ref="323"/>
+    <nd ref="324"/>
+    <nd ref="325"/>
+    <nd ref="326"/>
+    <tag k="highway" v="primary"/>
+  </way>
+  <way id="63" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="327"/>
+    <nd ref="328"/>
+    <nd ref="329"/>
+    <nd ref="330"/>
+    <nd ref="331"/>
+    <nd ref="332"/>
+    <tag k="highway" v="primary"/>
+  </way>
+  <way id="64" version="1" changeset="1" user="osm_generator" uid="1" timestamp="2026-06-02T00:00:00Z">
+    <nd ref="325"/>
+    <nd ref="333"/>
+    <nd ref="334"/>
+    <nd ref="335"/>
+    <nd ref="336"/>
+    <nd ref="337"/>
+    <nd ref="338"/>
+    <nd ref="339"/>
+    <nd ref="340"/>
+    <nd ref="341"/>
+    <nd ref="342"/>
+    <nd ref="343"/>
+    <nd ref="344"/>
+    <nd ref="345"/>
+    <nd ref="346"/>
+    <nd ref="347"/>
+    <nd ref="348"/>
+    <nd ref="349"/>
+    <nd ref="350"/>
+    <nd ref="351"/>
+    <nd ref="352"/>
+    <nd ref="353"/>
+    <nd ref="354"/>
+    <nd ref="355"/>
+    <nd ref="356"/>
+    <nd ref="357"/>
+    <nd ref="358"/>
+    <nd ref="359"/>
+    <nd ref="360"/>
+    <nd ref="361"/>
+    <nd ref="362"/>
+    <nd ref="363"/>
+    <nd ref="364"/>
+    <nd ref="365"/>
+    <nd ref="366"/>
+    <nd ref="367"/>
+    <nd ref="368"/>
+    <nd ref="369"/>
+    <nd ref="370"/>
+    <nd ref="371"/>
+    <nd ref="372"/>
+    <nd ref="373"/>
+    <nd ref="374"/>
+    <nd ref="375"/>
+    <nd ref="376"/>
+    <nd ref="377"/>
+    <nd ref="378"/>
+    <nd ref="379"/>
+    <nd ref="380"/>
+    <nd ref="381"/>
+    <nd ref="382"/>
+    <nd ref="383"/>
+    <nd ref="384"/>
+    <nd ref="385"/>
+    <nd ref="386"/>
+    <nd ref="387"/>
+    <nd ref="388"/>
+    <nd ref="389"/>
+    <nd ref="390"/>
+    <nd ref="391"/>
+    <nd ref="392"/>
+    <nd ref="393"/>
+    <nd ref="331"/>
+    <tag k="highway" v="primary"/>
+    <tag k="name" v="Camino de la Meseta"/>
+  </way>
+</osm>
