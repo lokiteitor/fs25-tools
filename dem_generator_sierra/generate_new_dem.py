@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 from scipy.ndimage import gaussian_filter
 
 # Import irregular forest coordinates from common.py
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../osm_generator_4096")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../osm_generator_sierra")))
 from common import IRREGULAR_FOREST_PTS
 
 # For generating visual maps
@@ -265,43 +265,35 @@ def main():
     # Define control points for the winding road path (only for y in [3200, 4800])
     # Starts at x=3500 (west of center) and ends at x=5800 (east)
     # Hugs the natural transition slope area (y between 3200 and 4800)
-    y_control = np.array([3200, 3600, 4000, 4400, 4800], dtype=np.float32)
-    x_control = np.array([3500, 4400, 4000, 5200, 5800], dtype=np.float32)
+    # Define control points for the new realistic mountain pass road
+    # It starts in the East of the North valley (x=5800, y=2800) and ends in the West of the South valley (x=2400, y=5500),
+    # crossing the sierra at the lowest saddle pass (x=2900, y=4388) with a margin relative to the playable borders.
+    y_control = np.array([2800, 3000, 3600, 4388, 4850, 5300, 5500], dtype=np.float32)
+    x_control = np.array([5800, 5800, 4300, 2900, 3500, 2400, 2400], dtype=np.float32)
     
-    # Fit clamped cubic spline (1D, since y is strictly increasing)
-    cs = CubicSpline(y_control, x_control, bc_type='clamped')
+    # Fit natural cubic spline (1D, since y is strictly increasing) to let it end diagonally
+    cs = CubicSpline(y_control, x_control, bc_type='natural')
     
-    # 1. North connection (straight vertical from y=2560 to y=3200 at x=3500)
-    Y_north = np.linspace(2560, 3200, 1000, dtype=np.float32)
-    X_north = np.full_like(Y_north, 3500.0)
-    H_north_seg = np.full_like(Y_north, H_north)
+    # Generate continuous coordinates for the entire road
+    Y_road = np.linspace(2800, 5500, 4000, dtype=np.float32)
+    X_road = cs(Y_road).astype(np.float32)
     
-    # 2. Middle winding road (spline from y=3200 to y=4800)
-    Y_mid = np.linspace(3200, 4800, 2000, dtype=np.float32)
-    X_mid = cs(Y_mid).astype(np.float32)
+    # Calculate cumulative distance along the 2D road path
+    dx = np.diff(X_road)
+    dy = np.diff(Y_road)
+    d_2d = np.sqrt(dx**2 + dy**2)
+    cum_d = np.zeros(len(Y_road), dtype=np.float32)
+    cum_d[1:] = np.cumsum(d_2d)
     
-    # Calculate cumulative distance along the middle section to interpolate heights
-    mid_pts = np.column_stack((X_mid, Y_mid))
-    mid_diffs = np.diff(mid_pts, axis=0)
-    mid_dists = np.sqrt(np.sum(mid_diffs**2, axis=1))
-    mid_cum_dists = np.zeros(len(Y_mid), dtype=np.float32)
-    mid_cum_dists[1:] = np.cumsum(mid_dists)
-    mid_total_len = mid_cum_dists[-1]
+    # Implement Ken Perlin's quintic smoothstep (C2 continuity) along cumulative arc-length
+    L_total = cum_d[-1]
+    u = cum_d / L_total
     
-    # Mountain pass road climbs up to a pass height and back down to the valley
-    H_pass = H_north + 18000.0  # Pass height is 180m above valley floor
-    t = mid_cum_dists / mid_total_len
-    H_mid_seg = H_north + (H_pass - H_north) * (np.sin(np.pi * t) ** 2)
-    
-    # 3. South connection (straight vertical from y=4800 to y=5632 at x=5800)
-    Y_south = np.linspace(4800, 5632, 1000, dtype=np.float32)
-    X_south = np.full_like(Y_south, 5800.0)
-    H_south_seg = np.full_like(Y_south, H_south)
-    
-    # Concatenate all segments
-    X_road = np.concatenate([X_north, X_mid, X_south])
-    Y_road = np.concatenate([Y_north, Y_mid, Y_south])
-    H_road = np.concatenate([H_north_seg, H_mid_seg, H_south_seg])
+    # Define a symmetric pass profile: climbing to H_pass in the first half, descending back in the second
+    H_pass = H_north + 18000.0  # Pass height is 180m above valley floor (380m total height)
+    t_param = np.where(u <= 0.5, 2.0 * u, 2.0 * (1.0 - u))
+    w_param = 6.0 * (t_param ** 5) - 15.0 * (t_param ** 4) + 10.0 * (t_param ** 3)
+    H_road = H_north + (H_pass - H_north) * w_param
     
     # Combined road points
     road_pts = np.column_stack((X_road, Y_road))
@@ -344,79 +336,46 @@ def main():
     # Extract local terrain slice
     local_terrain = terrain[y_min:y_max+1, x_min:x_max+1].copy()
     
-    # Masks
-    road_mask = dist_grid <= half_road
+    # Calculate transverse road flattening weight
+    w_road = np.zeros_like(dist_grid, dtype=np.float32)
+    # Inside the road bed
+    w_road[dist_grid <= half_road] = 1.0
+    # In the transition margin
     blend_mask = (dist_grid > half_road) & (dist_grid <= half_road + margin_width)
-    
-    # Apply flat road heights
-    local_terrain[road_mask] = target_heights[road_mask]
-    
-    # Apply cosine blend for transition
     d_blend = dist_grid[blend_mask] - half_road
-    w = 0.5 * (1.0 + np.cos(np.pi * d_blend / margin_width))
-    local_terrain[blend_mask] = w * target_heights[blend_mask] + (1.0 - w) * local_terrain[blend_mask]
+    w_road[blend_mask] = 0.5 * (1.0 + np.cos(np.pi * d_blend / margin_width))
     
-    # Apply light Gaussian filter to the transition to make it completely seamless
+    # Calculate longitudinal road fade weight to smooth the endpoints
+    u_grid = idx_grid / 3999.0
+    u_fade = 150.0 / L_total  # 150m fade distance at both ends
+    w_long = np.ones_like(u_grid, dtype=np.float32)
+    
+    # Start fade (smoothstep)
+    mask_start = u_grid < u_fade
+    t_fade_start = u_grid[mask_start] / u_fade
+    w_long[mask_start] = 6.0 * (t_fade_start ** 5) - 15.0 * (t_fade_start ** 4) + 10.0 * (t_fade_start ** 3)
+    
+    # End fade (smoothstep)
+    mask_end = u_grid > 1.0 - u_fade
+    t_fade_end = (1.0 - u_grid[mask_end]) / u_fade
+    w_long[mask_end] = 6.0 * (t_fade_end ** 5) - 15.0 * (t_fade_end ** 4) + 10.0 * (t_fade_end ** 3)
+    
+    # Combine transverse and longitudinal weights
+    w_total = w_road * w_long
+    
+    # Apply road flattening blending to local terrain
+    local_terrain = w_total * target_heights + (1.0 - w_total) * local_terrain
+    
+    # Apply light Gaussian filter to the transition areas to make it completely seamless
     local_smoothed = gaussian_filter(local_terrain, sigma=4)
-    local_terrain[blend_mask] = local_smoothed[blend_mask]
+    smooth_mask = (w_total > 0.0) & (w_total < 1.0)
+    local_terrain[smooth_mask] = local_smoothed[smooth_mask]
     
     # Write back to terrain
     terrain[y_min:y_max+1, x_min:x_max+1] = local_terrain
     
-    print("5. Flattening southern farmyards with extra-gentle transitions...")
+    print("5. Skipping flattening of southern farmyards (valleys are already flat)...")
     offset = 2048
-    southern_yards = [
-        (3088 + offset, 3607 + offset, 3316 + offset, 4076 + offset, "Yard 0 (SE)"),
-        (268 + offset, 3607 + offset, 500 + offset, 3828 + offset, "Yard 5 (S1)"),
-        (1292 + offset, 3607 + offset, 1524 + offset, 3828 + offset, "Yard 6 (S2)"),
-        (2316 + offset, 3607 + offset, 2548 + offset, 3828 + offset, "Yard 7 (S3)")
-    ]
-    
-    margin = 120.0  # 120m transition margin for southern yards
-    
-    for x0, y0, x1, y1, name in southern_yards:
-        x0_c = max(0, min(S-1, x0))
-        x1_c = max(0, min(S-1, x1))
-        y0_c = max(0, min(S-1, y0))
-        y1_c = max(0, min(S-1, y1))
-        
-        # Calculate target height
-        sub = terrain[y0_c:y1_c+1, x0_c:x1_c+1]
-        H_target = np.median(sub)
-        print(f"   Flattening {name} to target height = {H_target:.1f} (margin={margin}m)")
-        
-        bx0 = max(0, int(x0_c - margin - 5))
-        bx1 = min(S-1, int(x1_c + margin + 5))
-        by0 = max(0, int(y0_c - margin - 5))
-        by1 = min(S-1, int(y1_c + margin + 5))
-        
-        terrain_ref = terrain.copy()
-        
-        ny = by1 - by0 + 1
-        nx = bx1 - bx0 + 1
-        local_ramp = np.zeros((ny, nx), dtype=bool)
-        
-        for y_offset, y in enumerate(range(by0, by1 + 1)):
-            for x_offset, x in enumerate(range(bx0, bx1 + 1)):
-                dx_pt = max(0.0, x0_c - x, x - x1_c)
-                dy_pt = max(0.0, y0_c - y, y - y1_c)
-                d = math.sqrt(dx_pt*dx_pt + dy_pt*dy_pt)
-                
-                if d == 0:
-                    terrain[y, x] = H_target
-                elif d <= margin:
-                    w = 0.5 * (1.0 + math.cos(math.pi * d / margin))
-                    terrain[y, x] = w * H_target + (1.0 - w) * terrain_ref[y, x]
-                    local_ramp[y_offset, x_offset] = True
-                    
-        # Local Gaussian smoothing specifically to the transition ramp (sigma=10)
-        local_terrain = terrain[by0:by1+1, bx0:bx1+1].copy()
-        local_smoothed = gaussian_filter(local_terrain, sigma=10)
-        
-        for y_offset, y in enumerate(range(by0, by1 + 1)):
-            for x_offset, x in enumerate(range(bx0, bx1 + 1)):
-                if local_ramp[y_offset, x_offset]:
-                    terrain[y, x] = local_smoothed[y_offset, x_offset]
                     
     # Clamp terrain to valid 16-bit range
     terrain = np.clip(terrain, 2000.0, 62000.0)

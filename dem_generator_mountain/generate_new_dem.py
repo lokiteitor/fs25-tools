@@ -292,7 +292,11 @@ def main():
     mid_cum_dists[1:] = np.cumsum(mid_dists)
     mid_total_len = mid_cum_dists[-1]
     
-    H_mid_seg = H_north + (H_south - H_north) * (mid_cum_dists / mid_total_len)
+    # Distance-based parameter (u in [0, 1])
+    u = mid_cum_dists / mid_total_len
+    # Quintic smoothstep for smooth slope transition (C2 continuity)
+    w = 6.0 * u**5 - 15.0 * u**4 + 10.0 * u**3
+    H_mid_seg = H_north + (H_south - H_north) * w
     
     # 3. South connection (straight vertical from y=4800 to y=5632 at x=5800)
     Y_south = np.linspace(4800, 5632, 1000, dtype=np.float32)
