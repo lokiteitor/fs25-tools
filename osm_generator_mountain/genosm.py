@@ -10,7 +10,10 @@ from common import (
     build_northern_strip, build_southern_strip,
     TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1, TOWN_STREET_SPACING,
     TOWN_VSTREETS, TOWN_HSTREETS, COL4_FIELDS,
-    IRREGULAR_FOREST_PTS,
+    IRREGULAR_FOREST_PTS, get_forest_edge_y,
+    NORTH_DIRT_ROADS_X, SOUTH_DIRT_ROADS_X,
+    NORTH_DIRT_ROAD_Y, SOUTH_DIRT_ROAD_Y,
+    build_middle_fields,
 )
 
 # --- Configurations ---
@@ -64,12 +67,36 @@ def add_way(nodes_list, tags):
     way_id_counter += 1
 
 # ================= 1. FIELDS (Farmland Parcels) =================
+# Winding mountain road (follows the path from dem_new.png)
+from scipy.interpolate import CubicSpline
+import numpy as np
+y_control = np.array([1152, 1552, 1952, 2352, 2752], dtype=np.float32)
+x_control = np.array([1452, 2352, 1952, 3152, 3752], dtype=np.float32)
+cs = CubicSpline(y_control, x_control, bc_type='clamped')
+
+road_pts = []
+# 1. North connection (straight vertical from y=512 to y=1152 at x=1452)
+for y_val in np.linspace(512, 1152, 15):
+    road_pts.append((1452.0, float(y_val)))
+
+# 2. Middle winding road (spline from y=1152 to y=2752, skipping the first node because it's (1452, 1152))
+for y_val in np.linspace(1152, 2752, 150)[1:]:
+    x_val = float(cs(y_val))
+    road_pts.append((x_val, float(y_val)))
+
+# 3. South connection (straight vertical from y=2752 to y=3584 at x=3752, skipping first because it's (3752, 2752))
+for y_val in np.linspace(2752, 3584, 15)[1:]:
+    road_pts.append((3752.0, float(y_val)))
+
 parcels = []
 
 # 1. Northern strip (Row 0): [0, 512] - Medium farmlands
 build_northern_strip(parcels)
 
-# 2. Southern strip: [3584, 4096] - Medium farmlands
+# 2. Middle grid fields (bounded by roads and contours)
+build_middle_fields(parcels)
+
+# 3. Southern strip: [3584, 4096] - Medium farmlands
 build_southern_strip(parcels)
 
 # --- Farmland Clipping Geometry ---
@@ -86,18 +113,35 @@ clips.append((TOWN_X0, TOWN_Y0, TOWN_X1, TOWN_Y1)) # Town residential clip
 for y_yd in yards:
     clips.append(y_yd)
 
-# Clip fields inside the bounding box of the winding forest
-if len(IRREGULAR_FOREST_PTS) > 0:
-    min_x = min(p[0] for p in IRREGULAR_FOREST_PTS)
-    max_x = max(p[0] for p in IRREGULAR_FOREST_PTS)
-    min_y = min(p[1] for p in IRREGULAR_FOREST_PTS)
-    max_y = max(p[1] for p in IRREGULAR_FOREST_PTS)
-    clips.append((min_x - 12, min_y - 12, max_x + 12, max_y + 12))
-
 # Add road footprints to clips (only horizontal roads y=512 and y=3584)
 for y in hlines:
     hw = TH_P/2 + W_ROAD_BORDER
     clips.append((0, y - hw, S, y + hw))
+
+# Add winding road footprints to clips
+hw_primary = TH_P/2 + W_ROAD_BORDER
+for i in range(len(road_pts) - 1):
+    x1, y1 = road_pts[i]
+    x2, y2 = road_pts[i+1]
+    clips.append((
+        min(x1, x2) - hw_primary,
+        min(y1, y2) - hw_primary,
+        max(x1, x2) + hw_primary,
+        max(y1, y2) + hw_primary
+    ))
+
+# Add vertical dirt road footprints to clips
+hw_dirt = TH_T/2 + W_ROAD_BORDER
+for x in NORTH_DIRT_ROADS_X:
+    y_end = get_forest_edge_y(x, 'upper')
+    clips.append((x - hw_dirt, 512.0, x + hw_dirt, y_end))
+for x in SOUTH_DIRT_ROADS_X:
+    y_end = get_forest_edge_y(x, 'lower')
+    clips.append((x - hw_dirt, y_end, x + hw_dirt, 3584.0))
+
+# Add horizontal dirt road footprints to clips
+clips.append((0, NORTH_DIRT_ROAD_Y - hw_dirt, S, NORTH_DIRT_ROAD_Y + hw_dirt))
+clips.append((0, SOUTH_DIRT_ROAD_Y - hw_dirt, S, SOUTH_DIRT_ROAD_Y + hw_dirt))
 
 def subtract_single(A, B):
     ax0, ay0, ax1, ay1 = A
@@ -138,28 +182,35 @@ def subtract_rects(subject, clip_list):
         current_rects = next_rects
     return current_rects
 
-# Add parcels as ways, clipping them with other area elements first
+# Add parcels as ways, clipping them with other area elements first (rectangles only)
 for p in parcels:
-    x0, y0, x1, y1 = p
-    clipped_parts = subtract_rects(p, clips)
-    for (cx0, cy0, cx1, cy1) in clipped_parts:
-        margin = 6
-        cx0_s = cx0 + margin
-        cx1_s = cx1 - margin
-        cy0_s = cy0 + margin
-        cy1_s = cy1 - margin
-        
-        if cx1_s - cx0_s <= 10.0 or cy1_s - cy0_s <= 10.0:
-            continue
-            
-        ns = [
-            create_unique_node(cx0_s, cy0_s),
-            create_unique_node(cx1_s, cy0_s),
-            create_unique_node(cx1_s, cy1_s),
-            create_unique_node(cx0_s, cy1_s),
-        ]
+    if isinstance(p, list) or (isinstance(p, tuple) and len(p) > 4):
+        # It's a polygon! We create nodes for each vertex directly and add it as a way
+        ns = [get_node(px, py) for (px, py) in p]
         ns.append(ns[0])
         add_way(ns, {'landuse': 'farmland'})
+    else:
+        # It's a rectangle!
+        x0, y0, x1, y1 = p
+        clipped_parts = subtract_rects(p, clips)
+        for (cx0, cy0, cx1, cy1) in clipped_parts:
+            margin = 6
+            cx0_s = cx0 + margin
+            cx1_s = cx1 - margin
+            cy0_s = cy0 + margin
+            cy1_s = cy1 - margin
+            
+            if cx1_s - cx0_s <= 10.0 or cy1_s - cy0_s <= 10.0:
+                continue
+                
+            ns = [
+                create_unique_node(cx0_s, cy0_s),
+                create_unique_node(cx1_s, cy0_s),
+                create_unique_node(cx1_s, cy1_s),
+                create_unique_node(cx0_s, cy1_s),
+            ]
+            ns.append(ns[0])
+            add_way(ns, {'landuse': 'farmland'})
 
 # ================= 2. TOWN =================
 
@@ -219,29 +270,36 @@ for y in hlines:
     ns = [get_node(x, y) for x in coords]
     add_way(ns, {'highway': 'primary'})
 
-# Winding mountain road (follows the path from dem_new.png)
-from scipy.interpolate import CubicSpline
-import numpy as np
-y_control = np.array([1152, 1552, 1952, 2352, 2752], dtype=np.float32)
-x_control = np.array([1452, 2352, 1952, 3152, 3752], dtype=np.float32)
-cs = CubicSpline(y_control, x_control, bc_type='clamped')
-
-road_pts = []
-# 1. North connection (straight vertical from y=512 to y=1152 at x=1452)
-for y_val in np.linspace(512, 1152, 15):
-    road_pts.append((1452.0, float(y_val)))
-
-# 2. Middle winding road (spline from y=1152 to y=2752, skipping the first node because it's (1452, 1152))
-for y_val in np.linspace(1152, 2752, 35)[1:]:
-    x_val = float(cs(y_val))
-    road_pts.append((x_val, float(y_val)))
-
-# 3. South connection (straight vertical from y=2752 to y=3584 at x=3752, skipping first because it's (3752, 2752))
-for y_val in np.linspace(2752, 3584, 15)[1:]:
-    road_pts.append((3752.0, float(y_val)))
+# Winding mountain road (reusing pre-generated road_pts)
 
 road_nodes = [get_node(x, y) for (x, y) in road_pts]
 add_way(road_nodes, {'highway': 'primary', 'name': 'Camino de la Meseta'})
+
+# Dirt roads (tracks) from main roads to forest edge
+for i, x in enumerate(NORTH_DIRT_ROADS_X):
+    y_end = get_forest_edge_y(x, 'upper')
+    # Generate nodes from y=512 down to y_end
+    pts = [(x, float(y_val)) for y_val in np.linspace(512, y_end, 5)]
+    road_nodes = [get_node(px, py) for (px, py) in pts]
+    add_way(road_nodes, {'highway': 'track', 'name': f'Sendero Norte {i+1}', 'surface': 'dirt'})
+
+for i, x in enumerate(SOUTH_DIRT_ROADS_X):
+    y_end = get_forest_edge_y(x, 'lower')
+    # Generate nodes from y=3584 up to y_end
+    pts = [(x, float(y_val)) for y_val in np.linspace(3584, y_end, 5)]
+    road_nodes = [get_node(px, py) for (px, py) in pts]
+    add_way(road_nodes, {'highway': 'track', 'name': f'Sendero Sur {i+1}', 'surface': 'dirt'})
+
+# Horizontal dirt roads (tracks)
+# North horizontal dirt road at y=1050
+north_horiz_pts = [25.0, 600.0, 1452.0, 2700.0, 3500.0, 4071.0]
+north_horiz_nodes = [get_node(x_val, NORTH_DIRT_ROAD_Y) for x_val in north_horiz_pts]
+add_way(north_horiz_nodes, {'highway': 'track', 'name': 'Sendero Horizontal Norte', 'surface': 'dirt'})
+
+# South horizontal dirt road at y=3200
+south_horiz_pts = [25.0, 800.0, 1800.0, 2600.0, 3752.0, 4071.0]
+south_horiz_nodes = [get_node(x_val, SOUTH_DIRT_ROAD_Y) for x_val in south_horiz_pts]
+add_way(south_horiz_nodes, {'highway': 'track', 'name': 'Sendero Horizontal Sur', 'surface': 'dirt'})
 
 # ================= 4. BUILD OSM XML =================
 root = ET.Element('osm', {

@@ -8,7 +8,10 @@ from common import (
     build_northern_strip, build_southern_strip,
     TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1, TOWN_STREET_SPACING,
     TOWN_VSTREETS, TOWN_HSTREETS, COL4_FIELDS,
-    IRREGULAR_FOREST_PTS,
+    IRREGULAR_FOREST_PTS, get_forest_edge_y,
+    NORTH_DIRT_ROADS_X, SOUTH_DIRT_ROADS_X,
+    NORTH_DIRT_ROAD_Y, SOUTH_DIRT_ROAD_Y,
+    build_middle_fields,
 )
 
 random.seed(20240605)
@@ -38,17 +41,27 @@ parcels = []
 # 1. Northern strip (Row 0): [0, 512] - Medium farmlands
 build_northern_strip(parcels)
 
-# 2. Southern strip: [3584, 4096] - Medium farmlands
+# 2. Middle grid fields (bounded by roads and contours)
+build_middle_fields(parcels)
+
+# 3. Southern strip: [3584, 4096] - Medium farmlands
 build_southern_strip(parcels)
 
-# Draw farmland parcels
-for (x0, y0, x1, y1) in parcels:
-    cx0 = max(BORDER, x0)
-    cy0 = max(BORDER, y0)
-    cx1 = min(S - BORDER, x1)
-    cy1 = min(S - BORDER, y1)
-    if cx1 - cx0 > 20 and cy1 - cy0 > 20:
-        rect(cx0, cy0, cx1, cy1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
+# Draw farmland parcels (handles both rectangular and polygon parcels)
+for p in parcels:
+    if isinstance(p, list) or (isinstance(p, tuple) and len(p) > 4):
+        # It's a polygon!
+        d.polygon(p, fill=C_FARM)
+        d.line(p + [p[0]], fill=C_FARMB, width=W_FIELD_BORDER, joint="round")
+    else:
+        # It's a rectangle!
+        x0, y0, x1, y1 = p
+        cx0 = max(BORDER, x0)
+        cy0 = max(BORDER, y0)
+        cx1 = min(S - BORDER, x1)
+        cy1 = min(S - BORDER, y1)
+        if cx1 - cx0 > 20 and cy1 - cy0 > 20:
+            rect(cx0, cy0, cx1, cy1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
 
 # ================= FOREST =================
 if len(IRREGULAR_FOREST_PTS) > 0:
@@ -88,6 +101,18 @@ road_pts.extend([(3752.0, y) for y in np.linspace(2752, 3584, 200)])
 # Draw winding road outline
 d.line(road_pts, fill=C_FARMB, width=TH_P + 2*W_ROAD_BORDER, joint="round")
 
+# Draw dirt road outlines (thickness TH_T + 2*W_ROAD_BORDER)
+for x in NORTH_DIRT_ROADS_X:
+    y_end = get_forest_edge_y(x, 'upper')
+    d.line([(x, 512), (x, y_end)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+for x in SOUTH_DIRT_ROADS_X:
+    y_end = get_forest_edge_y(x, 'lower')
+    d.line([(x, 3584), (x, y_end)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+
+# Draw horizontal dirt road outlines
+d.line([(BORDER, NORTH_DIRT_ROAD_Y), (S - BORDER, NORTH_DIRT_ROAD_Y)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+d.line([(BORDER, SOUTH_DIRT_ROAD_Y), (S - BORDER, SOUTH_DIRT_ROAD_Y)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
+
 # ================= TOWN =================
 # Draw residential block
 rect(TOWN_X0, TOWN_Y0, TOWN_X1, TOWN_Y1, C_RES)
@@ -112,6 +137,18 @@ for y in hlines:
 
 # Draw winding road fill
 d.line(road_pts, fill=C_ROADP, width=TH_P, joint="round")
+
+# Draw dirt road fills (color C_ROADT, thickness TH_T)
+for x in NORTH_DIRT_ROADS_X:
+    y_end = get_forest_edge_y(x, 'upper')
+    d.line([(x, 512), (x, y_end)], fill=C_ROADT, width=TH_T, joint="round")
+for x in SOUTH_DIRT_ROADS_X:
+    y_end = get_forest_edge_y(x, 'lower')
+    d.line([(x, 3584), (x, y_end)], fill=C_ROADT, width=TH_T, joint="round")
+
+# Draw horizontal dirt road fills
+d.line([(BORDER, NORTH_DIRT_ROAD_Y), (S - BORDER, NORTH_DIRT_ROAD_Y)], fill=C_ROADT, width=TH_T, joint="round")
+d.line([(BORDER, SOUTH_DIRT_ROAD_Y), (S - BORDER, SOUTH_DIRT_ROAD_Y)], fill=C_ROADT, width=TH_T, joint="round")
 
 # Paint the 25m border solid black
 rect(0, 0, S, BORDER, (0, 0, 0))
