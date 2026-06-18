@@ -106,24 +106,6 @@ yards = [
 
 import math
 
-# Generate winding forest points along the plateau transition slope
-IRREGULAR_FOREST_PTS = []
-x_steps = list(range(50, 4047, 100))
-if x_steps[-1] < 4046:
-    x_steps.append(4046)
-
-# Upper edge of the forest (from west to east)
-for x in x_steps:
-    y_boundary = 2048.0 + 400.0 * math.sin(2.0 * math.pi * (x + 2048) / 8192.0) + 100.0 * math.cos(2.0 * math.pi * (x + 2048) / 4096.0)
-    y_upper = y_boundary - 350.0
-    IRREGULAR_FOREST_PTS.append((float(round(x, 2)), float(round(y_upper, 2))))
-
-# Lower edge of the forest (from east to west)
-for x in reversed(x_steps):
-    y_boundary = 2048.0 + 400.0 * math.sin(2.0 * math.pi * (x + 2048) / 8192.0) + 100.0 * math.cos(2.0 * math.pi * (x + 2048) / 4096.0)
-    y_lower = y_boundary + 350.0
-    IRREGULAR_FOREST_PTS.append((float(round(x, 2)), float(round(y_lower, 2))))
-
 def get_forest_edge_y(x, side):
     """Calcula la coordenada Y del borde superior o inferior del bosque winding."""
     y_boundary = 2048.0 + 400.0 * math.sin(2.0 * math.pi * (x + 2048) / 8192.0) + 100.0 * math.cos(2.0 * math.pi * (x + 2048) / 4096.0)
@@ -131,6 +113,66 @@ def get_forest_edge_y(x, side):
         return y_boundary - 350.0
     else:
         return y_boundary + 350.0
+def get_merged_forest_edge_y(x, side):
+    y_raw = get_forest_edge_y(x, side)
+    if side == 'upper':
+        if 1400.0 <= x <= 2700.0:
+            return 1152.0
+        else:
+            return y_raw
+    else:
+        if 1400.0 <= x <= 2700.0:
+            return max(y_raw, 2552.0)
+        else:
+            return y_raw
+
+def get_south_dirt_road_y_end(x):
+    y_forest = get_merged_forest_edge_y(x, 'lower') + GAP
+    if x == 2600.0:
+        return 2674.4
+    return y_forest
+
+# Generate winding forest points along the plateau transition slope merged with the winding road forest rectangle
+IRREGULAR_FOREST_PTS = []
+x_steps = list(range(50, 4047, 50))
+if x_steps[-1] < 4046:
+    x_steps.append(4046)
+
+# Upper edge (left to right)
+for x in x_steps:
+    if x > 1400.0 and (not IRREGULAR_FOREST_PTS or IRREGULAR_FOREST_PTS[-1][0] < 1400.0):
+        IRREGULAR_FOREST_PTS.append((1400.0, float(round(get_forest_edge_y(1400.0, 'upper'), 2))))
+        IRREGULAR_FOREST_PTS.append((1400.0, 1152.0))
+        
+    if x > 2700.0 and (IRREGULAR_FOREST_PTS[-1][0] == 2700.0 or IRREGULAR_FOREST_PTS[-1][0] < 2700.0):
+        IRREGULAR_FOREST_PTS.append((2700.0, 1152.0))
+        IRREGULAR_FOREST_PTS.append((2700.0, float(round(get_forest_edge_y(2700.0, 'upper'), 2))))
+        
+    if 1400.0 <= x <= 2700.0:
+        IRREGULAR_FOREST_PTS.append((float(x), 1152.0))
+    else:
+        IRREGULAR_FOREST_PTS.append((float(x), float(round(get_forest_edge_y(x, 'upper'), 2))))
+
+# Lower edge (right to left)
+right_to_left = []
+for x in reversed(x_steps):
+    if x < 2700.0 and (not right_to_left or right_to_left[-1][0] > 2700.0):
+        y_corner = get_forest_edge_y(2700.0, 'lower')
+        right_to_left.append((2700.0, float(round(y_corner, 2))))
+        right_to_left.append((2700.0, float(round(max(y_corner, 2552.0), 2))))
+        
+    if x < 1400.0 and (right_to_left[-1][0] == 1400.0 or right_to_left[-1][0] > 1400.0):
+        y_corner = get_forest_edge_y(1400.0, 'lower')
+        right_to_left.append((1400.0, float(round(max(y_corner, 2552.0), 2))))
+        right_to_left.append((1400.0, float(round(y_corner, 2))))
+        
+    if 1400.0 <= x <= 2700.0:
+        y_val = max(get_forest_edge_y(x, 'lower'), 2552.0)
+        right_to_left.append((float(x), float(round(y_val, 2))))
+    else:
+        right_to_left.append((float(x), float(round(get_forest_edge_y(x, 'lower'), 2))))
+
+IRREGULAR_FOREST_PTS.extend(right_to_left)
 
 # Posiciones de caminos de terraceria (de norte a sur) que van de caminos principales al bosque
 NORTH_DIRT_ROADS_X = [600.0, 2700.0, 3500.0]
@@ -146,8 +188,8 @@ def build_middle_fields(parcels):
     from scipy.interpolate import CubicSpline
 
     # Re-create winding road path coordinates for calculating intersections
-    y_control = np.array([1152, 1552, 1952, 2352, 2752], dtype=np.float32)
-    x_control = np.array([1452, 2352, 1952, 3152, 3752], dtype=np.float32)
+    y_control = np.array([1152, 1272, 1302, 1332, 1522, 1552, 1582, 1772, 1802, 1832, 2022, 2052, 2082, 2272, 2302, 2332, 2522, 2552, 2582, 2752], dtype=np.float32)
+    x_control = np.array([1452, 1702, 1552, 1702, 2402, 2552, 2402, 1702, 1552, 1702, 2402, 2552, 2402, 1702, 1552, 1702, 2402, 2552, 2402, 3752], dtype=np.float32)
     cs = CubicSpline(y_control, x_control, bc_type='clamped')
 
     road_pts = []
@@ -175,69 +217,81 @@ def build_middle_fields(parcels):
 
     # Fila inferior (y: 1050 al bosque)
     # N7 (Oeste)
-    x_steps = np.linspace(584.0, 31.0, 5)
-    bottom_n7 = [(x, get_forest_edge_y(x, 'upper') - 12) for x in x_steps]
+    x_steps = np.linspace(584.0, 31.0, 30)
+    bottom_n7 = [(x, get_merged_forest_edge_y(x, 'upper') - 12) for x in x_steps]
     parcels.append([(31.0, 1066.0), (584.0, 1066.0)] + bottom_n7)
 
-    # N8 (Centro-Oeste, al oeste de la carretera winding)
-    # Filtramos puntos de la carretera por encima del bosque
-    west_road = [(rx - 23.0, ry) for (rx, ry) in road_pts if ry <= get_forest_edge_y(rx, 'upper') - 12 and ry >= 1066.0]
+    west_road = []
+    for (rx, ry) in road_pts:
+        if ry >= 1066.0:
+            val = rx - 150.0
+            if 1152.0 <= ry <= 2552.0:
+                val = min(val, 1400.0)
+            if ry <= get_merged_forest_edge_y(val, 'upper') - 12:
+                west_road.append((val, ry))
     last_x, last_y = west_road[-1]
     # Limite del bosque desde el final de la carretera hasta x=616
-    x_steps = np.linspace(last_x, 616.0, 5)
-    bottom_n8 = [(last_x, last_y)] + [(x, get_forest_edge_y(x, 'upper') - 12) for x in x_steps[1:]]
+    x_steps = np.linspace(last_x, 616.0, 30)
+    bottom_n8 = [(last_x, last_y)] + [(x, get_merged_forest_edge_y(x, 'upper') - 12) for x in x_steps[1:]]
     parcels.append([(616.0, 1066.0), (1429.0, 1066.0)] + west_road + bottom_n8)
 
     # N9 (Centro-Este, al este de la carretera winding)
-    east_road = [(rx + 23.0, ry) for (rx, ry) in road_pts if ry <= get_forest_edge_y(rx, 'upper') - 12 and ry >= 1066.0]
+    east_road = [(rx + 150.0, ry) for (rx, ry) in road_pts if ry <= get_merged_forest_edge_y(rx + 150.0, 'upper') - 12 and ry >= 1066.0 and ry < 1152.0]
     last_x, last_y = east_road[-1]
     # Limite del bosque desde x=2684 hasta el final de la carretera
-    x_steps = np.linspace(2684.0, last_x, 5)
-    bottom_n9 = [(x, get_forest_edge_y(x, 'upper') - 12) for x in x_steps[:-1]] + [(last_x, last_y)]
+    x_steps = np.linspace(2684.0, last_x, 30)
+    bottom_n9 = [(x, get_merged_forest_edge_y(x, 'upper') - 12) for x in x_steps[:-1]] + [(last_x, last_y)]
     parcels.append([(2684.0, 1066.0)] + bottom_n9 + list(reversed(east_road)) + [(1475.0, 1066.0)])
 
     # N10 (Este)
-    x_steps = np.linspace(3484.0, 2716.0, 5)
-    bottom_n10 = [(x, get_forest_edge_y(x, 'upper') - 12) for x in x_steps]
+    x_steps = np.linspace(3484.0, 2716.0, 30)
+    bottom_n10 = [(x, get_merged_forest_edge_y(x, 'upper') - 12) for x in x_steps]
     parcels.append([(2716.0, 1066.0), (3484.0, 1066.0)] + bottom_n10)
 
     # N11 (Far East)
-    x_steps = np.linspace(4065.0, 3516.0, 5)
-    bottom_n11 = [(x, get_forest_edge_y(x, 'upper') - 12) for x in x_steps]
+    x_steps = np.linspace(4065.0, 3516.0, 30)
+    bottom_n11 = [(x, get_merged_forest_edge_y(x, 'upper') - 12) for x in x_steps]
     parcels.append([(3516.0, 1066.0), (4065.0, 1066.0)] + bottom_n11)
 
 
     # --- SECTOR SUR (y: bosque a 3584) ---
     # Fila superior (y: bosque a 3200)
     # S6 (Oeste)
-    x_steps = np.linspace(31.0, 784.0, 5)
-    top_s6 = [(x, get_forest_edge_y(x, 'lower') + 12) for x in x_steps]
+    x_steps = np.linspace(31.0, 784.0, 30)
+    top_s6 = [(x, get_merged_forest_edge_y(x, 'lower') + 12) for x in x_steps]
     parcels.append(top_s6 + [(784.0, 3184.0), (31.0, 3184.0)])
 
     # S7 (Centro-Oeste)
-    x_steps = np.linspace(816.0, 1784.0, 5)
-    top_s7 = [(x, get_forest_edge_y(x, 'lower') + 12) for x in x_steps]
+    x_steps = np.linspace(816.0, 1784.0, 30)
+    top_s7 = [(x, get_merged_forest_edge_y(x, 'lower') + 12) for x in x_steps]
     parcels.append(top_s7 + [(1784.0, 3184.0), (816.0, 3184.0)])
 
     # S8 (Centro-Este)
-    x_steps = np.linspace(1816.0, 2584.0, 5)
-    top_s8 = [(x, get_forest_edge_y(x, 'lower') + 12) for x in x_steps]
-    parcels.append(top_s8 + [(2584.0, 3184.0), (1816.0, 3184.0)])
+    right_edge_s8 = []
+    for y_val in np.linspace(2564.0, 3184.0, 30):
+        y_val = float(y_val)
+        rx = float(cs(y_val)) if y_val <= 2752.0 else 3752.0
+        limit_x = min(2584.0, rx - 180.0)
+        right_edge_s8.append((limit_x, y_val))
+    first_limit_x = right_edge_s8[0][0]
+    x_steps = np.linspace(1816.0, first_limit_x, 15)
+    top_s8 = [(float(x), 2564.0) for x in x_steps[:-1]]
+    parcels.append(top_s8 + right_edge_s8 + [(1816.0, 3184.0)])
 
     # S9 (Este, al oeste de la carretera winding)
-    west_road_s = [(rx - 23.0, ry) for (rx, ry) in road_pts if ry >= get_forest_edge_y(rx, 'lower') + 12 and ry <= 3184.0 and rx - 23.0 >= 2616.0]
+    west_road_s = [(rx - 180.0, ry) for (rx, ry) in road_pts if ry >= get_merged_forest_edge_y(rx - 180.0, 'lower') + 12 and ry <= 3184.0 and rx - 180.0 >= 2616.0]
     first_x, first_y = west_road_s[0]
     # Limite del bosque desde x=2616 hasta la carretera
-    x_steps = np.linspace(2616.0, first_x, 5)
-    top_s9 = [(x, get_forest_edge_y(x, 'lower') + 12) for x in x_steps[:-1]] + [(first_x, first_y)]
+    x_steps = np.linspace(2616.0, first_x, 30)
+    top_s9 = [(x, max(get_merged_forest_edge_y(x, 'lower') + 12, first_y)) for x in x_steps[:-1]] + [(first_x, first_y)]
     parcels.append(top_s9 + west_road_s + [(3729.0, 3184.0), (2616.0, 3184.0)])
 
     # S10 (Far East, al este de la carretera winding)
-    east_road_s = [(rx + 23.0, ry) for (rx, ry) in road_pts if ry >= get_forest_edge_y(rx, 'lower') + 12 and ry <= 3184.0]
+    east_road_s = [(rx + 180.0, ry) for (rx, ry) in road_pts if ry >= get_merged_forest_edge_y(rx + 180.0, 'lower') + 12 and ry <= 3184.0]
     first_x, first_y = east_road_s[0]
     # Limite del bosque desde la carretera hasta x=4065
-    x_steps = np.linspace(first_x, 4065.0, 5)
-    top_s10 = [(first_x, first_y)] + [(x, get_forest_edge_y(x, 'lower') + 12) for x in x_steps[1:]]
+    x_steps = np.linspace(first_x, 4065.0, 30)
+    top_s10 = [(first_x, first_y)] + [(x, get_merged_forest_edge_y(x, 'lower') + 12) for x in x_steps[1:]]
     parcels.append(list(reversed(east_road_s)) + top_s10 + [(4065.0, 3184.0), (3775.0, 3184.0)])
 
     # Fila inferior (y: 3200 a 3584) - rectangulos con margenes

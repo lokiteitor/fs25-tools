@@ -8,13 +8,31 @@ from common import (
     build_northern_strip, build_southern_strip,
     TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1, TOWN_STREET_SPACING,
     TOWN_VSTREETS, TOWN_HSTREETS, COL4_FIELDS,
-    IRREGULAR_FOREST_PTS, get_forest_edge_y,
+    IRREGULAR_FOREST_PTS, get_merged_forest_edge_y, get_south_dirt_road_y_end,
     NORTH_DIRT_ROADS_X, SOUTH_DIRT_ROADS_X,
     NORTH_DIRT_ROAD_Y, SOUTH_DIRT_ROAD_Y,
     build_middle_fields,
 )
 
 random.seed(20240605)
+
+# Generate winding mountain road coordinates (relative coordinates scaled from 8K DEM)
+from scipy.interpolate import CubicSpline
+import numpy as np
+y_control = np.array([1152, 1272, 1302, 1332, 1522, 1552, 1582, 1772, 1802, 1832, 2022, 2052, 2082, 2272, 2302, 2332, 2522, 2552, 2582, 2752], dtype=np.float32)
+x_control = np.array([1452, 1702, 1552, 1702, 2402, 2552, 2402, 1702, 1552, 1702, 2402, 2552, 2402, 1702, 1552, 1702, 2402, 2552, 2402, 3752], dtype=np.float32)
+cs = CubicSpline(y_control, x_control, bc_type='clamped')
+
+# 1. North connection (straight vertical from y=512 to y=1152)
+road_pts = [(1452.0, y) for y in np.linspace(512, 1152, 200)]
+
+# 2. Middle winding road (spline from y=1152 to y=2752)
+Y_mid = np.linspace(1152, 2752, 1000, dtype=np.float32)
+X_mid = cs(Y_mid).astype(np.float32)
+road_pts.extend([(x, y) for x, y in zip(X_mid, Y_mid)])
+
+# 3. South connection (straight vertical from y=2752 to y=3584)
+road_pts.extend([(3752.0, y) for y in np.linspace(2752, 3584, 200)])
 
 # ---- palette ----
 C_FARM   = (150,168,88)
@@ -64,9 +82,12 @@ for p in parcels:
             rect(cx0, cy0, cx1, cy1, C_FARM, outline=C_FARMB, width=W_FIELD_BORDER)
 
 # ================= FOREST =================
+# Draw the regular winding forest along the plateau transition slope
 if len(IRREGULAR_FOREST_PTS) > 0:
     d.line(IRREGULAR_FOREST_PTS + [IRREGULAR_FOREST_PTS[0]], fill=C_FARMB, width=24, joint="round")
     d.polygon(IRREGULAR_FOREST_PTS, fill=C_FOREST)
+
+# The rectangular forest is now merged into IRREGULAR_FOREST_PTS
 
 # ================= ROAD WIDTHS AND HELPERS =================
 
@@ -80,33 +101,17 @@ def hline_fill(y,th,col):
 for y in hlines:
     hline_outline(y, TH_P)
 
-# Generate winding mountain road coordinates (relative coordinates scaled from 8K DEM)
-from scipy.interpolate import CubicSpline
-import numpy as np
-y_control = np.array([1152, 1552, 1952, 2352, 2752], dtype=np.float32)
-x_control = np.array([1452, 2352, 1952, 3152, 3752], dtype=np.float32)
-cs = CubicSpline(y_control, x_control, bc_type='clamped')
-
-# 1. North connection (straight vertical from y=512 to y=1152)
-road_pts = [(1452.0, y) for y in np.linspace(512, 1152, 200)]
-
-# 2. Middle winding road (spline from y=1152 to y=2752)
-Y_mid = np.linspace(1152, 2752, 1000, dtype=np.float32)
-X_mid = cs(Y_mid).astype(np.float32)
-road_pts.extend([(x, y) for x, y in zip(X_mid, Y_mid)])
-
-# 3. South connection (straight vertical from y=2752 to y=3584)
-road_pts.extend([(3752.0, y) for y in np.linspace(2752, 3584, 200)])
+# Outline of the roads will be drawn next
 
 # Draw winding road outline
 d.line(road_pts, fill=C_FARMB, width=TH_P + 2*W_ROAD_BORDER, joint="round")
 
 # Draw dirt road outlines (thickness TH_T + 2*W_ROAD_BORDER)
 for x in NORTH_DIRT_ROADS_X:
-    y_end = get_forest_edge_y(x, 'upper')
+    y_end = get_merged_forest_edge_y(x, 'upper') - GAP
     d.line([(x, 512), (x, y_end)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
 for x in SOUTH_DIRT_ROADS_X:
-    y_end = get_forest_edge_y(x, 'lower')
+    y_end = get_south_dirt_road_y_end(x)
     d.line([(x, 3584), (x, y_end)], fill=C_FARMB, width=TH_T + 2*W_ROAD_BORDER, joint="round")
 
 # Draw horizontal dirt road outlines
@@ -140,10 +145,10 @@ d.line(road_pts, fill=C_ROADP, width=TH_P, joint="round")
 
 # Draw dirt road fills (color C_ROADT, thickness TH_T)
 for x in NORTH_DIRT_ROADS_X:
-    y_end = get_forest_edge_y(x, 'upper')
+    y_end = get_merged_forest_edge_y(x, 'upper') - GAP
     d.line([(x, 512), (x, y_end)], fill=C_ROADT, width=TH_T, joint="round")
 for x in SOUTH_DIRT_ROADS_X:
-    y_end = get_forest_edge_y(x, 'lower')
+    y_end = get_south_dirt_road_y_end(x)
     d.line([(x, 3584), (x, y_end)], fill=C_ROADT, width=TH_T, joint="round")
 
 # Draw horizontal dirt road fills
@@ -156,5 +161,8 @@ rect(0, S - BORDER, S, S, (0, 0, 0))
 rect(0, 0, BORDER, S, (0, 0, 0))
 rect(S - BORDER, 0, S, S, (0, 0, 0))
 
-img.save("outputs/zoning_map.png")
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(os.path.join(script_dir, "outputs"), exist_ok=True)
+img.save(os.path.join(script_dir, "outputs/zoning_map.png"))
 print("done: map generated with PLSS grid (simplified)")

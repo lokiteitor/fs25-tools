@@ -10,7 +10,7 @@ from common import (
     build_northern_strip, build_southern_strip,
     TOWN_X0, TOWN_X1, TOWN_Y0, TOWN_Y1, TOWN_STREET_SPACING,
     TOWN_VSTREETS, TOWN_HSTREETS, COL4_FIELDS,
-    IRREGULAR_FOREST_PTS, get_forest_edge_y,
+    IRREGULAR_FOREST_PTS, get_merged_forest_edge_y, get_south_dirt_road_y_end,
     NORTH_DIRT_ROADS_X, SOUTH_DIRT_ROADS_X,
     NORTH_DIRT_ROAD_Y, SOUTH_DIRT_ROAD_Y,
     build_middle_fields,
@@ -70,8 +70,8 @@ def add_way(nodes_list, tags):
 # Winding mountain road (follows the path from dem_new.png)
 from scipy.interpolate import CubicSpline
 import numpy as np
-y_control = np.array([1152, 1552, 1952, 2352, 2752], dtype=np.float32)
-x_control = np.array([1452, 2352, 1952, 3152, 3752], dtype=np.float32)
+y_control = np.array([1152, 1272, 1302, 1332, 1522, 1552, 1582, 1772, 1802, 1832, 2022, 2052, 2082, 2272, 2302, 2332, 2522, 2552, 2582, 2752], dtype=np.float32)
+x_control = np.array([1452, 1702, 1552, 1702, 2402, 2552, 2402, 1702, 1552, 1702, 2402, 2552, 2402, 1702, 1552, 1702, 2402, 2552, 2402, 3752], dtype=np.float32)
 cs = CubicSpline(y_control, x_control, bc_type='clamped')
 
 road_pts = []
@@ -118,25 +118,29 @@ for y in hlines:
     hw = TH_P/2 + W_ROAD_BORDER
     clips.append((0, y - hw, S, y + hw))
 
-# Add winding road footprints to clips
-hw_primary = TH_P/2 + W_ROAD_BORDER
+# Add winding road forest rectangle to clips
+clips.append((1400.0, 1152.0, 2700.0, 2552.0))
+
+# Add winding road connection segments to clips (those outside the forest y-range)
+hw_primary = 23.0
 for i in range(len(road_pts) - 1):
     x1, y1 = road_pts[i]
     x2, y2 = road_pts[i+1]
-    clips.append((
-        min(x1, x2) - hw_primary,
-        min(y1, y2) - hw_primary,
-        max(x1, x2) + hw_primary,
-        max(y1, y2) + hw_primary
-    ))
+    if y1 < 1152.0 or y1 > 2552.0:
+        clips.append((
+            min(x1, x2) - hw_primary,
+            min(y1, y2) - hw_primary,
+            max(x1, x2) + hw_primary,
+            max(y1, y2) + hw_primary
+        ))
 
 # Add vertical dirt road footprints to clips
 hw_dirt = TH_T/2 + W_ROAD_BORDER
 for x in NORTH_DIRT_ROADS_X:
-    y_end = get_forest_edge_y(x, 'upper')
+    y_end = get_merged_forest_edge_y(x, 'upper') - GAP
     clips.append((x - hw_dirt, 512.0, x + hw_dirt, y_end))
 for x in SOUTH_DIRT_ROADS_X:
-    y_end = get_forest_edge_y(x, 'lower')
+    y_end = get_south_dirt_road_y_end(x)
     clips.append((x - hw_dirt, y_end, x + hw_dirt, 3584.0))
 
 # Add horizontal dirt road footprints to clips
@@ -247,11 +251,10 @@ for (x0, y0, x1, y1) in yards:
     ns.append(ns[0])
     add_way(ns, {'landuse': 'farmyard', 'building': 'industrial'})
 
-# ================= 2.6 FOREST =================
 if len(IRREGULAR_FOREST_PTS) > 0:
     irr_forest_nodes = [create_unique_node(x, y) for (x, y) in IRREGULAR_FOREST_PTS]
     irr_forest_nodes.append(irr_forest_nodes[0])
-    add_way(irr_forest_nodes, {'natural': 'wood', 'landuse': 'farmyard', 'name': 'Bosque de la Meseta'})
+    add_way(irr_forest_nodes, {'natural': 'wood', 'landuse': 'forest', 'name': 'Bosque de la Meseta y del Camino Sinuoso'})
 
 # ================= 3. ROADS =================
 # Horizontal roads
@@ -277,14 +280,14 @@ add_way(road_nodes, {'highway': 'primary', 'name': 'Camino de la Meseta'})
 
 # Dirt roads (tracks) from main roads to forest edge
 for i, x in enumerate(NORTH_DIRT_ROADS_X):
-    y_end = get_forest_edge_y(x, 'upper')
+    y_end = get_merged_forest_edge_y(x, 'upper') - GAP
     # Generate nodes from y=512 down to y_end
     pts = [(x, float(y_val)) for y_val in np.linspace(512, y_end, 5)]
     road_nodes = [get_node(px, py) for (px, py) in pts]
     add_way(road_nodes, {'highway': 'track', 'name': f'Sendero Norte {i+1}', 'surface': 'dirt'})
 
 for i, x in enumerate(SOUTH_DIRT_ROADS_X):
-    y_end = get_forest_edge_y(x, 'lower')
+    y_end = get_south_dirt_road_y_end(x)
     # Generate nodes from y=3584 up to y_end
     pts = [(x, float(y_val)) for y_val in np.linspace(3584, y_end, 5)]
     road_nodes = [get_node(px, py) for (px, py) in pts]
@@ -351,7 +354,8 @@ for w in ways:
         })
 
 # Format and write
-os.makedirs("outputs", exist_ok=True)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(os.path.join(script_dir, "outputs"), exist_ok=True)
 xml_str = ET.tostring(root, encoding='utf-8')
 parsed = minidom.parseString(xml_str)
 pretty_xml = parsed.toprettyxml(indent="  ")
@@ -359,7 +363,7 @@ pretty_xml = parsed.toprettyxml(indent="  ")
 cleaned_lines = [line for line in pretty_xml.split('\n') if line.strip() != ""]
 cleaned_xml = '\n'.join(cleaned_lines)
 
-output_file = "outputs/zoning_map.osm"
+output_file = os.path.join(script_dir, "outputs/zoning_map.osm")
 with open(output_file, "w", encoding="utf-8") as f:
     f.write(cleaned_xml)
 

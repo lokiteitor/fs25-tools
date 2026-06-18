@@ -160,9 +160,10 @@ def main():
     seed = 20260608
     np.random.seed(seed)
     
-    output_dem_path = "dem_new.png"
-    output_vis_path = "dem_new_visual.png"
-    output_detail_vis_path = "dem_new_visual_detail.png"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dem_path = os.path.join(script_dir, "dem_new.png")
+    output_vis_path = os.path.join(script_dir, "dem_new_visual.png")
+    output_detail_vis_path = os.path.join(script_dir, "dem_new_visual_detail.png")
     
     print(f"1. Generating coordinate grids for size {S}x{S}...")
     y_indices, x_indices = np.indices((S, S), dtype=np.float32)
@@ -262,15 +263,32 @@ def main():
     # Add erosion detail back to the 8K terrain
     terrain = terrain + erosion_detail_8K
     
-    print("4. Creating winding mountain road hugging the slope (3 curves, center-west to east)...")
+    print("4. Creating winding mountain road hugging the slope (concentrated hairpin curves, under 8% slope)...")
     from scipy.interpolate import CubicSpline
     from scipy.spatial import cKDTree
     
     # Define control points for the winding road path (only for y in [3200, 4800])
-    # Starts at x=3500 (west of center) and ends at x=5800 (east)
-    # Hugs the natural transition slope area (y between 3200 and 4800)
-    y_control = np.array([3200, 3600, 4000, 4400, 4800], dtype=np.float32)
-    x_control = np.array([3500, 4400, 4000, 5200, 5800], dtype=np.float32)
+    # Confined horizontally between x=3500 and x=4600 to preserve cultivable fields
+    y_control = np.array([
+        3200, 
+        3320, 3350, 3380, 
+        3570, 3600, 3630, 
+        3820, 3850, 3880, 
+        4070, 4100, 4130, 
+        4320, 4350, 4380, 
+        4570, 4600, 4630, 
+        4800
+    ], dtype=np.float32)
+    x_control = np.array([
+        3500,
+        3750, 3600, 3750, 
+        4450, 4600, 4450, 
+        3750, 3600, 3750, 
+        4450, 4600, 4450, 
+        3750, 3600, 3750, 
+        4450, 4600, 4450, 
+        5800
+    ], dtype=np.float32)
     
     # Fit clamped cubic spline (1D, since y is strictly increasing)
     cs = CubicSpline(y_control, x_control, bc_type='clamped')
@@ -313,14 +331,15 @@ def main():
     
     # Define road parameters
     road_width = 16.0    # 16 pixels/meters wide flat surface
-    margin_width = 45.0  # 45 pixels/meters transition to natural terrain
+    margin_width = 60.0  # Reduced margin to 60m for a narrower slope transition
     half_road = road_width / 2.0
     
     # Bounding box coordinates with margin for efficiency
-    x_min = int(np.min(X_road) - road_width - margin_width - 10)
-    x_max = int(np.max(X_road) + road_width + margin_width + 10)
-    y_min = int(np.min(Y_road) - road_width - margin_width - 10)
-    y_max = int(np.max(Y_road) + road_width + margin_width + 10)
+    bbox_margin = margin_width + 70.0
+    x_min = int(np.min(X_road) - bbox_margin)
+    x_max = int(np.max(X_road) + bbox_margin)
+    y_min = int(np.min(Y_road) - bbox_margin)
+    y_max = int(np.max(Y_road) + bbox_margin)
     
     # Ensure indices are within bounds
     x_min = max(0, x_min)
@@ -361,9 +380,25 @@ def main():
     w = 0.5 * (1.0 + np.cos(np.pi * d_blend / margin_width))
     local_terrain[blend_mask] = w * target_heights[blend_mask] + (1.0 - w) * local_terrain[blend_mask]
     
-    # Apply light Gaussian filter to the transition to make it completely seamless
-    local_smoothed = gaussian_filter(local_terrain, sigma=4)
-    local_terrain[blend_mask] = local_smoothed[blend_mask]
+    # Apply smooth blending transition to eliminate abrupt cuts
+    w_smooth = np.zeros_like(dist_grid, dtype=np.float32)
+    
+    # Rise from road center to road edge (so road center is completely untouched and flat)
+    mask_rise = (dist_grid > half_road - 6.0) & (dist_grid <= half_road)
+    w_smooth[mask_rise] = (dist_grid[mask_rise] - (half_road - 6.0)) / 6.0
+    
+    # Full smoothing in the transition zone
+    mask_full = (dist_grid > half_road) & (dist_grid <= half_road + margin_width)
+    w_smooth[mask_full] = 1.0
+    
+    # Fall from transition zone to natural terrain
+    falloff_width = 40.0  # Reduced falloff to 40m
+    mask_fall = (dist_grid > half_road + margin_width) & (dist_grid <= half_road + margin_width + falloff_width)
+    w_smooth[mask_fall] = 1.0 - (dist_grid[mask_fall] - (half_road + margin_width)) / falloff_width
+    
+    # Apply Gaussian filter to the blended local terrain slice (with sigma=15.0 for extra smoothness without bleeding)
+    local_smoothed = gaussian_filter(local_terrain, sigma=15.0)
+    local_terrain = (1.0 - w_smooth) * local_terrain + w_smooth * local_smoothed
     
     # Write back to terrain
     terrain[y_min:y_max+1, x_min:x_max+1] = local_terrain
