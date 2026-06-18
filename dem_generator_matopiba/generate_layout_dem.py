@@ -66,8 +66,9 @@ def generate_fractal_noise_2d(shape, resolutions, amplitudes, seed=42):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a DEM map following a specific layout with realistic imperfections.")
-    parser.add_argument("--output", default="map_dem_new.png", help="Path to output DEM image.")
-    parser.add_argument("--output-visual", default="map_dem_new_visual.png", help="Path to output 3D visualization.")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    parser.add_argument("--output", default=os.path.join(script_dir, "map_dem_new.png"), help="Path to output DEM image.")
+    parser.add_argument("--output-visual", default=os.path.join(script_dir, "map_dem_new_visual.png"), help="Path to output 3D visualization.")
     parser.add_argument("--canvas-size", type=int, default=8192, help="Output canvas size in pixels.")
     parser.add_argument("--center-size", type=int, default=4096, help="Playable area size in pixels.")
     parser.add_argument("--blend-margin", type=int, default=256, help="Blend margin width in pixels.")
@@ -94,26 +95,45 @@ def main():
     x_warped = x_coords + warp_x
     y_warped = y_coords + warp_y
     
-    # 3. Define the Low flat area (Blue Zone at 5m)
-    print("2. Generating baseline geometry (L-shaped top-left low flat area)...")
-    # In playable area coordinate space [2048, 6144]:
-    # Blue zone runs along top and left. Width = 600m.
-    # Therefore, blue zone is x <= 2648 or y <= 2648
+    # 3. Define the Low flat area & West North-to-South Ramp (Scenario A)
+    print("2. Generating baseline geometry (low north flat area & west north-to-south ramp)...")
     blue_boundary = float(offset + 600)
+    south_boundary = float(offset + C)
+    
+    # Vertical ramp profile for the western strip (from blue_boundary to south_boundary)
+    # Reach the 250m plateau early (500m before the southern playable border)
+    # to create a flat base landing ("como una escalera").
+    base_size = 500.0 * (S / 8192.0)
+    denom = max(1.0, south_boundary - base_size - blue_boundary)
+    t_y = np.clip((y_warped - blue_boundary) / denom, 0.0, 1.0)
+    H_west = 5.0 + (250.0 - 5.0) * t_y
+    
+    # Constant ramp width for uniform slope across the map
+    ramp_width = 500.0
+    
+    # Low zone mask is the L-shape (for distance transform)
     low_zone_mask = (x_warped <= blue_boundary) | (y_warped <= blue_boundary)
     
-    # 4. Compute slope transitions using distance transform
-    print("3. Generating transition slopes (Orange Zone) up to the Plateau (White Zone)...")
+    # Compute distance to the lowland L-shape
     dist_to_low = distance_transform_edt(~low_zone_mask)
-    
-    # 1 km (1000m) transition slope from 5m to 250m
-    # 1.5 km (500m) transition slope from 5m to 250m
-    ramp_width = 500.0
     t = np.clip(dist_to_low / ramp_width, 0.0, 1.0)
     w_slope = 0.5 * (1.0 - np.cos(np.pi * t))
     
+    # Blend starting height smoothly in the quadrant based on distance components
+    dx = np.maximum(0.0, x_warped - blue_boundary)
+    dy = np.maximum(0.0, y_warped - blue_boundary)
+    sum_d = dx + dy
+    sum_d = np.where(sum_d == 0.0, 1e-5, sum_d)
+    w_blend = dy / sum_d
+    
+    # Smooth the junction only at the south where the ramp and the plateau meet,
+    # without affecting the slope in the northern and middle parts of the map.
+    w_blend = w_blend + (1.0 - w_blend) * (t_y ** 4)
+    
+    H_start = 5.0 + (H_west - 5.0) * w_blend
+    
     # Base elevation in meters
-    baseline_meters = 5.0 + (250.0 - 5.0) * w_slope
+    baseline_meters = H_start + (250.0 - H_start) * w_slope
     
     # 5. Add Realistic Imperfections
     print("4. Adding realistic imperfections (slope ravines & micro-roughness)...")
@@ -125,6 +145,8 @@ def main():
     # 5b. Micro-roughness in flat terrain areas (smoothed to avoid bumpy farming fields)
     micro_roughness = generate_fractal_noise_2d((S, S), [64, 128, 256], [0.15, 0.08, 0.04], seed=args.seed + 103)
     baseline_meters += micro_roughness
+    
+
     
     # Convert meters to raw heightmap units
     baseline = baseline_meters * 100.0
@@ -231,7 +253,7 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 12), dpi=150)
     ax.imshow(hs)
     ax.axis('off')
-    ax.set_title("Layout-Based DEM Map (8192x8192 - Wavy Slopes, Flat L-Valley & Plateau)", fontsize=16, fontweight='bold', pad=15)
+    ax.set_title("Layout-Based DEM Map (8192x8192 - Wavy Slopes, Northern Lowland & Western Ramp)", fontsize=16, fontweight='bold', pad=15)
     
     # Add playable border rectangle
     rect_playable = plt.Rectangle((offset / vis_scale, offset / vis_scale), 
@@ -246,6 +268,7 @@ def main():
                                      fill=False, edgecolor='yellow', linewidth=1.5, linestyle=':',
                                      label='Transition Zone')
     ax.add_patch(rect_transition)
+    
     ax.legend(loc='upper right', facecolor='black', labelcolor='white')
     
     plt.savefig(args.output_visual, bbox_inches='tight')
