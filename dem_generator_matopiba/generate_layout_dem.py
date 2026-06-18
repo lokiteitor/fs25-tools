@@ -136,13 +136,29 @@ def main():
     baseline_meters = H_start + (250.0 - H_start) * w_slope
     
     # 5. Add Realistic Imperfections
-    print("4. Adding realistic imperfections (slope ravines & micro-roughness)...")
-    # 5a. Slope imperfections (ridges and ravines only on the hillside)
+    print("4. Adding realistic imperfections (slope ravines, erosion gullies & micro-roughness)...")
+    # 5a. Slope imperfections (general organic ridges and valleys)
     slope_noise = generate_fractal_noise_2d((S, S), [16, 32, 64], [12.0, 6.0, 3.0], seed=args.seed + 102)
     slope_mask = 4.0 * w_slope * (1.0 - w_slope) # Only active on slopes (reaches 1.0 at midpoint)
     baseline_meters += slope_noise * slope_mask
     
-    # 5b. Micro-roughness in flat terrain areas (smoothed to avoid bumpy farming fields)
+    # 5b. Anisotropic Water Erosion Gullies (Cárcavas) running downhill
+    print("   - Generating directional water erosion gullies on slopes...")
+    # Western slope erosion (horizontal channels: varies fast in Y, slow in X)
+    gw1 = np.maximum(0.0, generate_perlin_noise_2d((S, S), (64, 8), seed=args.seed + 150))
+    gw2 = np.maximum(0.0, generate_perlin_noise_2d((S, S), (128, 16), seed=args.seed + 151))
+    gullies_west = (gw1 * 12.0 + gw2 * 6.0) ** 1.3
+    
+    # Northern slope erosion (vertical channels: varies fast in X, slow in Y)
+    gn1 = np.maximum(0.0, generate_perlin_noise_2d((S, S), (8, 64), seed=args.seed + 152))
+    gn2 = np.maximum(0.0, generate_perlin_noise_2d((S, S), (16, 128), seed=args.seed + 153))
+    gullies_north = (gn1 * 12.0 + gn2 * 6.0) ** 1.3
+    
+    # Blend erosion channels based on quadrant position to align with downhill gradient
+    gullies = w_blend * gullies_west + (1.0 - w_blend) * gullies_north
+    baseline_meters -= gullies * slope_mask
+    
+    # 5c. Micro-roughness in flat terrain areas (smoothed to avoid bumpy farming fields)
     micro_roughness = generate_fractal_noise_2d((S, S), [64, 128, 256], [0.15, 0.08, 0.04], seed=args.seed + 103)
     baseline_meters += micro_roughness
     
