@@ -208,6 +208,38 @@ def main():
     w_bump = 0.5 * (1.0 - np.cos(np.pi * w_bump))
     baseline_meters += 2.0 * w_bump * w_long
     
+    # Blend the flat resting platforms at the curve apexes
+    idx1 = np.argmin(np.abs(road_y - 2850.0 * scale))
+    idx2 = np.argmin(np.abs(road_y - 3100.0 * scale))
+    idx3 = np.argmin(np.abs(road_y - 3350.0 * scale))
+    
+    ax1, ay1, ah1 = road_x[idx1], road_y[idx1], road_height[idx1]
+    ax2, ay2, ah2 = road_x[idx2], road_y[idx2], road_height[idx2]
+    ax3, ay3, ah3 = road_x[idx3], road_y[idx3], road_height[idx3]
+    
+    px1, py1 = ax1 - 100.0 * scale, ay1
+    px2, py2 = ax2 + 100.0 * scale, ay2
+    px3, py3 = ax3 - 100.0 * scale, ay3
+    
+    dist_p1 = np.sqrt((x_coords - px1)**2 + (y_coords - py1)**2)
+    dist_p2 = np.sqrt((x_coords - px2)**2 + (y_coords - py2)**2)
+    dist_p3 = np.sqrt((x_coords - px3)**2 + (y_coords - py3)**2)
+    
+    # 100m flat radius + 40m blend radius (200m flat surface, 240m total influence width inside curve)
+    w_p1 = np.clip(1.0 - (dist_p1 - 100.0 * scale) / (40.0 * scale), 0.0, 1.0)
+    w_p1 = 0.5 * (1.0 - np.cos(np.pi * w_p1))
+    
+    w_p2 = np.clip(1.0 - (dist_p2 - 100.0 * scale) / (40.0 * scale), 0.0, 1.0)
+    w_p2 = 0.5 * (1.0 - np.cos(np.pi * w_p2))
+    
+    w_p3 = np.clip(1.0 - (dist_p3 - 100.0 * scale) / (40.0 * scale), 0.0, 1.0)
+    w_p3 = 0.5 * (1.0 - np.cos(np.pi * w_p3))
+    
+    w_p_sum = w_p1 + w_p2 + w_p3
+    w_p_sum_clip = np.clip(w_p_sum, 0.0, 1.0)
+    
+    baseline_meters = w_p1 * ah1 + w_p2 * ah2 + w_p3 * ah3 + (1.0 - w_p_sum_clip) * baseline_meters
+    
     # Smooth the terrain surrounding the road (using Gaussian filter)
     # to eliminate sharp cuts and blend the road naturally into the hillside.
     smoothed_baseline = gaussian_filter(baseline_meters, sigma=35.0 * scale)
@@ -225,6 +257,7 @@ def main():
     # Road suppression mask for terrain features (gullies, roughness)
     road_suppression_base = np.clip((dist_to_road - road_r) / margin, 0.0, 1.0)
     road_suppression = 1.0 - (1.0 - road_suppression_base) * w_long
+    road_suppression = road_suppression * (1.0 - w_p_sum_clip)
     
     # 5. Add Realistic Imperfections
     print("4. Adding realistic imperfections (slope ravines, erosion gullies & micro-roughness)...")
