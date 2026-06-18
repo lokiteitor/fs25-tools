@@ -286,7 +286,20 @@ def main():
     micro_roughness = generate_fractal_noise_2d((S, S), [64, 128, 256], [0.15, 0.08, 0.04], seed=args.seed + 103)
     baseline_meters += micro_roughness * road_suppression
     
-
+    # 5d. Plateau irregular terrain (altiplano undulations, peak-to-peak range of 5 meters)
+    print("   - Adding irregular undulations to the plateau (altiplano)...")
+    w_plateau = np.clip((w_slope - 0.9) / 0.1, 0.0, 1.0)
+    w_plateau = 0.5 * (1.0 - np.cos(np.pi * w_plateau))
+    
+    raw_plateau_noise = generate_fractal_noise_2d((S, S), [16, 32, 64], [1.0, 0.5, 0.2], seed=args.seed + 200)
+    p_min, p_max = raw_plateau_noise.min(), raw_plateau_noise.max()
+    if p_max - p_min > 1e-5:
+        scaled_plateau_noise = (raw_plateau_noise - p_min) / (p_max - p_min) - 0.5  # Range -0.5 to 0.5
+        scaled_plateau_noise *= 5.0  # Range -2.5 to 2.5 meters (5m peak-to-peak difference)
+    else:
+        scaled_plateau_noise = raw_plateau_noise * 0.0
+        
+    baseline_meters += scaled_plateau_noise * w_plateau * road_suppression
     
     # Convert meters to raw heightmap units
     baseline = baseline_meters * 100.0
