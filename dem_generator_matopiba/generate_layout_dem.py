@@ -5,7 +5,8 @@ import time
 import math
 import numpy as np
 from PIL import Image
-from scipy.ndimage import distance_transform_edt
+from scipy.ndimage import distance_transform_edt, gaussian_filter
+from scipy.interpolate import make_interp_spline
 
 # For generating high-quality visual relief maps
 import matplotlib
@@ -100,6 +101,19 @@ def main():
     blue_boundary = float(offset + 600)
     south_boundary = float(offset + C)
     
+    # Extend the slope in the North-East quadrant to accommodate the road
+    # Default ramp_width is 500m.
+    # We increase it smoothly up to 1300m in the North-East region.
+    dx_ne = x_coords - 5500.0 * (S / 8192.0)
+    dy_ne = y_coords - 3100.0 * (S / 8192.0)
+    dist_ne = np.sqrt(dx_ne**2 + dy_ne**2)
+    # Cosine falloff over 1600 meters (scaled)
+    w_ne = np.clip(1.0 - dist_ne / (1600.0 * (S / 8192.0)), 0.0, 1.0)
+    w_ne = 0.5 * (1.0 - np.cos(np.pi * w_ne))
+    
+    # ramp_width is now a 2D map
+    ramp_width = 500.0 + 800.0 * w_ne
+    
     # Vertical ramp profile for the western strip (from blue_boundary to south_boundary)
     # Reach the 250m plateau early (500m before the southern playable border)
     # to create a flat base landing ("como una escalera").
@@ -107,9 +121,6 @@ def main():
     denom = max(1.0, south_boundary - base_size - blue_boundary)
     t_y = np.clip((y_warped - blue_boundary) / denom, 0.0, 1.0)
     H_west = 5.0 + (250.0 - 5.0) * t_y
-    
-    # Constant ramp width for uniform slope across the map
-    ramp_width = 500.0
     
     # Low zone mask is the L-shape (for distance transform)
     low_zone_mask = (x_warped <= blue_boundary) | (y_warped <= blue_boundary)
@@ -135,12 +146,92 @@ def main():
     # Base elevation in meters
     baseline_meters = H_start + (250.0 - H_start) * w_slope
     
+    # --- Winding Road Generation (Camino Ondulado) ---
+    print("3. Generating winding road in the North-East slope...")
+    scale = S / 8192.0
+    pts = np.array([
+        [5200.0, 2600.0],
+        [5700.0, 2850.0],
+        [5000.0, 3100.0],
+        [5700.0, 3350.0],
+        [5200.0, 3750.0]
+    ]) * scale
+    
+    t_pts = np.linspace(0.0, 1.0, len(pts))
+    spline = make_interp_spline(t_pts, pts, k=3)
+    
+    # Evaluate at high resolution to avoid gaps
+    t_eval = np.linspace(0.0, 1.0, 10000)
+    road_coords = spline(t_eval)
+    road_x = road_coords[:, 0]
+    road_y = road_coords[:, 1]
+    
+    # Calculate cumulative distance along the road
+    dx_road = np.diff(road_x)
+    dy_road = np.diff(road_y)
+    seg_lengths = np.sqrt(dx_road**2 + dy_road**2)
+    cum_dist = np.zeros(len(road_x))
+    cum_dist[1:] = np.cumsum(seg_lengths)
+    total_length = cum_dist[-1]
+    
+    # Road height goes from 5m to 250m
+    road_height = 5.0 + (250.0 - 5.0) * (cum_dist / total_length)
+    
+    # Rasterize the road onto a grid
+    road_grid = np.zeros((S, S), dtype=bool)
+    rx = np.clip(road_x.astype(np.int32), 0, S - 1)
+    ry = np.clip(road_y.astype(np.int32), 0, S - 1)
+    road_grid[ry, rx] = True
+    
+    # Calculate distance transform to the road
+    dist_to_road, indices = distance_transform_edt(~road_grid, return_indices=True)
+    nearest_y = indices[0]
+    nearest_x = indices[1]
+    
+    # Populate the road height grid
+    road_height_grid = np.zeros((S, S), dtype=np.float32)
+    road_height_grid[ry, rx] = road_height
+    nearest_road_height = road_height_grid[nearest_y, nearest_x]
+    
+    # Road parameters
+    road_r = 8.0 * scale
+    margin = 50.0 * scale  # Increased margin from 15.0 to 50.0 for much wider shoulders
+    blend_r = road_r + margin
+    
+    # Longitudinal weight based on road height to ensure it is 100% flat sideways on the slope
+    w_long = np.clip((nearest_road_height - 5.0) / 5.0, 0.0, 1.0) * np.clip((250.0 - nearest_road_height) / 5.0, 0.0, 1.0)
+    w_long = 0.5 * (1.0 - np.cos(np.pi * w_long))
+    
+    # Elevate the terrain around the road to create a natural supporting ridge/embankment
+    influence_r = 160.0 * scale
+    w_bump = np.clip(1.0 - dist_to_road / influence_r, 0.0, 1.0)
+    w_bump = 0.5 * (1.0 - np.cos(np.pi * w_bump))
+    baseline_meters += 2.0 * w_bump * w_long
+    
+    # Smooth the terrain surrounding the road (using Gaussian filter)
+    # to eliminate sharp cuts and blend the road naturally into the hillside.
+    smoothed_baseline = gaussian_filter(baseline_meters, sigma=35.0 * scale)
+    w_smooth = np.clip(1.0 - dist_to_road / (160.0 * scale), 0.0, 1.0)
+    w_smooth = 0.5 * (1.0 - np.cos(np.pi * w_smooth)) * w_long
+    baseline_meters = w_smooth * smoothed_baseline + (1.0 - w_smooth) * baseline_meters
+    
+    # Apply the flat road surface and blend the shoulders
+    t_road = np.clip((blend_r - dist_to_road) / margin, 0.0, 1.0)
+    w_road = 0.5 * (1.0 - np.cos(np.pi * t_road))
+    w_combined = w_road * w_long
+    
+    baseline_meters = w_combined * nearest_road_height + (1.0 - w_combined) * baseline_meters
+    
+    # Road suppression mask for terrain features (gullies, roughness)
+    road_suppression_base = np.clip((dist_to_road - road_r) / margin, 0.0, 1.0)
+    road_suppression = 1.0 - (1.0 - road_suppression_base) * w_long
+    
     # 5. Add Realistic Imperfections
     print("4. Adding realistic imperfections (slope ravines, erosion gullies & micro-roughness)...")
     # 5a. Slope imperfections (general organic ridges and valleys)
     slope_noise = generate_fractal_noise_2d((S, S), [16, 32, 64], [12.0, 6.0, 3.0], seed=args.seed + 102)
     slope_mask = 4.0 * w_slope * (1.0 - w_slope) # Only active on slopes (reaches 1.0 at midpoint)
-    baseline_meters += slope_noise * slope_mask
+    baseline_meters += slope_noise * slope_mask * road_suppression
     
     # 5b. Anisotropic Water Erosion Gullies (Cárcavas) running downhill
     print("   - Generating directional water erosion gullies on slopes...")
@@ -156,11 +247,11 @@ def main():
     
     # Blend erosion channels based on quadrant position to align with downhill gradient
     gullies = w_blend * gullies_west + (1.0 - w_blend) * gullies_north
-    baseline_meters -= gullies * slope_mask
+    baseline_meters -= gullies * slope_mask * road_suppression
     
     # 5c. Micro-roughness in flat terrain areas (smoothed to avoid bumpy farming fields)
     micro_roughness = generate_fractal_noise_2d((S, S), [64, 128, 256], [0.15, 0.08, 0.04], seed=args.seed + 103)
-    baseline_meters += micro_roughness
+    baseline_meters += micro_roughness * road_suppression
     
 
     

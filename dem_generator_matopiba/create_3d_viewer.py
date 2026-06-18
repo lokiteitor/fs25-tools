@@ -815,7 +815,10 @@ def main():
             
             loadingProgress.innerText = "Cargando Textura del Mapa...";
             
-            textureLoader.load('dem_1024_texture.png', function(tex) {{
+            // Cache-busting query parameter to force reloading the images from disk
+            const cb = '?t=' + Date.now();
+            
+            textureLoader.load('dem_1024_texture.png' + cb, function(tex) {{
                 colorTexture = tex;
                 colorTexture.wrapS = THREE.ClampToEdgeWrapping;
                 colorTexture.wrapT = THREE.ClampToEdgeWrapping;
@@ -823,7 +826,7 @@ def main():
                 loadingProgress.innerText = "Cargando Datos de Elevación (16-bit)...";
                 
                 const img = new Image();
-                img.src = 'dem_1024_rgb16.png';
+                img.src = 'dem_1024_rgb16.png' + cb;
                 img.onload = function() {{
                     heightmapImage = img;
                     
@@ -846,7 +849,7 @@ def main():
                 loadingProgress.innerText = "Error al cargar texturas. Iniciando con colores planos...";
                 // Fallback heightmap parse
                 const img = new Image();
-                img.src = 'dem_1024_rgb16.png';
+                img.src = 'dem_1024_rgb16.png' + cb;
                 img.onload = function() {{
                     heightmapImage = img;
                     parseHeightmap(img);
