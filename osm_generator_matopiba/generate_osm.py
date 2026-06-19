@@ -216,9 +216,9 @@ def main():
     warp_x_8k = generate_fractal_noise_2d((S, S), [16, 32], [80.0, 30.0], seed=12345 + 100)
     
     # Control points for the wobbly and turning segment
-    # Sample the ramp segment at y_c from 0 to 3400 in playable coords
+    # Sample the ramp segment at y_c from 0 to 3596 in playable coords
     west_pts = []
-    ramp_y_samples = [0.0, 500.0, 1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3400.0]
+    ramp_y_samples = [0.0, 500.0, 1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3300.0, 3500.0, 3596.0]
     for y_c in ramp_y_samples:
         # We sample warp_x_8k at [y_8k, 2048 + 580]
         # x_c is 580 in playable coords (on top of the flat ramp strip, 20m from hillside at 600)
@@ -226,22 +226,27 @@ def main():
         x_c = 580.0 - warp_val
         west_pts.append([x_c, y_c])
         
-    # Add curve points to turn East onto the plateau (y=3596)
-    # The curve dips into the southern platform of the ramp (y >= 3596)
-    warp_val_3550 = warp_x_8k[int(2048 + 3550), int(2048 + 580)]
-    x_3550 = 580.0 - warp_val_3550
-    west_pts.append([x_3550, 3550.0])
+    # Add curve points on the platform to turn East onto the plateau (y=3596)
+    # y=3650 is on the southern platform of the ramp (y >= 3596)
+    warp_val_3650 = warp_x_8k[int(2048 + 3650), int(2048 + 580)]
+    x_3650 = 580.0 - warp_val_3650
+    west_pts.append([x_3650, 3650.0])
     
     # Apex of the curve on the platform
-    west_pts.append([850.0, 3720.0])
+    west_pts.append([800.0, 3900.0])
     
     # Transitioning back to the straight line
-    west_pts.append([1200.0, 3650.0])
+    west_pts.append([1200.0, 3750.0])
     west_pts.append([1500.0, 3596.0])
     
-    # Interpolate wobbly and turning segment
+    # Interpolate wobbly and turning segment using cumulative distance parameterization
+    # to prevent spline wiggles/overshoots
     west_pts = np.array(west_pts)
-    t_pts_w = np.linspace(0.0, 1.0, len(west_pts))
+    dists = np.sqrt(np.sum(np.diff(west_pts, axis=0)**2, axis=1))
+    t_pts_w = np.zeros(len(west_pts))
+    t_pts_w[1:] = np.cumsum(dists)
+    t_pts_w = t_pts_w / t_pts_w[-1]
+    
     spline_w = make_interp_spline(t_pts_w, west_pts, k=3)
     
     t_eval_w = np.linspace(0.0, 1.0, 500)
