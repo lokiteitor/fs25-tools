@@ -113,7 +113,8 @@ def main():
         color_rules = [
             ("natural", "wood", "#22C55E"),      # Forest green
             ("landuse", "forest", "#22C55E"),
-            ("landuse", "farmyard", "#22C55E"),   # Forest polygon has landuse=farmyard
+            ("landuse", "farmyard", "#EC4899"),   # Pink for farmyard
+            ("landuse", "farmland", "#86EFAC"),   # Light green for farmland
             ("natural", "water", "#2563EB"),     # Water blue
             ("water", None, "#2563EB"),
             ("highway", None, "#4B5563"),        # Road gray
@@ -1236,7 +1237,9 @@ def main():
                 if (way.tags.natural === 'wood' || way.tags.landuse === 'forest') {{
                     color = 0x22c55e; // Green for forest
                 }} else if (way.tags.landuse === 'farmyard') {{
-                    color = 0x854d0e; // Brown/clay for farmyard
+                    color = 0xec4899; // Pink for farmyard
+                }} else if (way.tags.landuse === 'farmland') {{
+                    color = 0x86efac; // Light green for farmland
                 }} else if (way.tags.highway) {{
                     color = 0x9ca3af; // Gray for road
                 }} else if (way.tags.natural === 'water' || way.tags.water) {{

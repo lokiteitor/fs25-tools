@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FS25 DEM & OSM Editor - Matopiba</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Three.js and OrbitControls via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <h1>FS25 DEM & OSM Editor</h1>
+            <span>MATOPIBA</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-sm btn-primary" onclick="window.showHelp()">Guía de Uso (?)</button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <div class="workspace-container">
+        
+        <!-- Left Sidebar: Controls & Options -->
+        <aside class="sidebar">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('tab-dem')">Terreno (DEM)</button>
+                <button class="tab-btn" onclick="switchTab('tab-osm')">Vectores (OSM)</button>
+                <button class="tab-btn" onclick="switchTab('tab-io')">Importar / Exportar</button>
+            </div>
+            
+            <!-- Tab 1: DEM Editing -->
+            <div id="tab-dem" class="tab-content" style="display: block;">
+                <!-- Map Setup -->
+                <div class="panel-section">
+                    <h3>Configuración de Mapa</h3>
+                    <div class="control-row">
+                        <label for="editor-res">Resolución Interna</label>
+                        <select id="editor-res" onchange="window.resizeInternalCanvas(this.value)">
+                            <option value="512" selected>512 x 512 (Fluido)</option>
+                            <option value="1024">1024 x 1024 (Detallado)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Procedural Generator Parameters -->
+                <div class="panel-section">
+                    <h3>Generador Procedimental</h3>
+                    <div class="control-row">
+                        <label for="param-seed">Semilla (Seed)</label>
+                        <input type="number" id="param-seed" value="12345">
+                    </div>
+                    <div class="control-row">
+                        <label for="param-flat-height">Altura del Llano (m) <span id="val-flat-height">100m</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="param-flat-height" min="0" max="300" step="5" value="100" oninput="updateParamValue(this)">
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label for="param-roughness">Rugosidad de Campos <span id="val-roughness">0.15m</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="param-roughness" min="0.0" max="1.0" step="0.05" value="0.15" oninput="updateParamValue(this, 'm')">
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label for="param-border-noise">Ruido Montañas Borde <span id="val-border-noise">1.0x</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="param-border-noise" min="0.0" max="3.0" step="0.1" value="1.0" oninput="updateParamValue(this, 'x')">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.generateBaseDEM()">
+                        Generar Terreno Procedimental
+                    </button>
+                </div>
+
+                <!-- Manual Height Painting Brushes -->
+                <div class="panel-section">
+                    <h3>Pincel de Altura</h3>
+                    <div class="control-row">
+                        <label>Herramienta</label>
+                        <div class="toggle-group" id="brush-tools">
+                            <button class="toggle-btn active" onclick="setDEMTool('raise')">Elevar</button>
+                            <button class="toggle-btn" onclick="setDEMTool('lower')">Bajar</button>
+                            <button class="toggle-btn" onclick="setDEMTool('flatten')">Aplanar</button>
+                            <button class="toggle-btn" onclick="setDEMTool('smooth')">Suavizar</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label for="brush-size">Radio Pincel (m) <span id="val-brush-size">150m</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="brush-size" min="10" max="800" step="5" value="150" oninput="updateParamValue(this, 'm')">
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label for="brush-strength">Fuerza Pincel <span id="val-brush-strength">0.4x</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="brush-strength" min="0.05" max="1.0" step="0.05" value="0.4" oninput="updateParamValue(this, 'x')">
+                        </div>
+                    </div>
+                    <div class="control-row" id="flatten-height-row" style="display: none;">
+                        <label for="brush-target-height">Altura Objetivo (m) <span id="val-brush-target-height">100m</span></label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="brush-target-height" value="100" style="flex: 1;">
+                            <button class="btn btn-sm" style="width: auto; padding: 0 10px;" onclick="window.sampleNextPixelHeight()">Muestrear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ramp Tool (Herramienta Rampa) -->
+                <div class="panel-section">
+                    <h3>Creador de Rampas</h3>
+                    <div class="control-row">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <button class="btn btn-sm" id="btn-ramp-start" onclick="setDEMTool('ramp-start')">Fijar Inicio</button>
+                            <button class="btn btn-sm" id="btn-ramp-end" onclick="setDEMTool('ramp-end')">Fijar Fin</button>
+                        </div>
+                        <div style="margin-top: 6px; font-size: 10px; color: var(--text-muted); text-align: center;" id="ramp-points-status">
+                            Puntos de rampa sin definir.
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div>
+                                <label for="ramp-height-start">H Inicio (m)</label>
+                                <input type="number" id="ramp-height-start" value="5">
+                            </div>
+                            <div>
+                                <label for="ramp-height-end">H Fin (m)</label>
+                                <input type="number" id="ramp-height-end" value="250">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div>
+                                <label for="ramp-width-m">Ancho Calzada (m)</label>
+                                <input type="number" id="ramp-width-m" value="20">
+                            </div>
+                            <div>
+                                <label for="ramp-margin-m">Ancho Arcen (m)</label>
+                                <input type="number" id="ramp-margin-m" value="40">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="window.applyRampTool()">Aplicar Rampa</button>
+                </div>
+            </div>
+
+            <!-- Tab 2: OSM Editing -->
+            <div id="tab-osm" class="tab-content" style="display: none;">
+                <div class="panel-section">
+                    <h3>Herramientas OSM</h3>
+                    <div class="control-row">
+                        <label>Herramienta Vectorial</label>
+                        <div class="toggle-group" id="osm-tools">
+                            <button class="toggle-btn active" onclick="setOSMTool('select')">Editar Nodos</button>
+                            <button class="toggle-btn" onclick="setOSMTool('draw')">Crear Way</button>
+                        </div>
+                    </div>
+                    <div class="control-row" id="draw-closed-row" style="display: none;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; text-transform: none;">
+                            <input type="checkbox" id="draw-closed" checked style="width: 16px; height: 16px;">
+                            Cerrar Polígono (Área)
+                        </label>
+                    </div>
+                    <div class="control-row" id="draw-type-row" style="display: none;">
+                        <label for="way-preset-type">Categoría Predeterminada</label>
+                        <select id="way-preset-type">
+                            <option value="wood" selected>Bosque (natural=wood)</option>
+                            <option value="water">Agua (natural=water)</option>
+                            <option value="farmyard">Granja (landuse=farmyard)</option>
+                            <option value="highway">Carretera (highway=road)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Selection Inspector -->
+                <div class="panel-section" id="osm-selection-panel" style="display: none;">
+                    <h3>Propiedades de Way Seleccionada</h3>
+                    <div class="control-row">
+                        <label>ID del Elemento: <span id="selected-way-id" style="font-family: monospace;">Ninguno</span></label>
+                        <label>Vértices: <span id="selected-way-nodes-count" style="font-family: monospace;">0</span></label>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Etiquetas (Tags)</label>
+                        <div class="tags-list" id="selected-way-tags-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Add Tag Form -->
+                    <div class="control-row">
+                        <label>Añadir Etiqueta</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                            <input type="text" id="new-tag-key" placeholder="clave (k)">
+                            <input type="text" id="new-tag-val" placeholder="valor (v)">
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="window.addTagToSelectedWay()">Añadir Etiqueta</button>
+                    </div>
+                    
+                    <button class="btn btn-sm btn-danger" style="margin-top: 10px;" onclick="window.deleteSelectedWay()">
+                        Eliminar Way Completa
+                    </button>
+                </div>
+                
+                <div id="osm-no-selection" style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 20px;">
+                    Selecciona una línea o polígono para editar sus etiquetas o nodos.
+                </div>
+            </div>
+
+            <!-- Tab 3: Import / Export Options -->
+            <div id="tab-io" class="tab-content" style="display: none;">
+                <div class="panel-section">
+                    <h3>Importar Archivos</h3>
+                    <div class="control-row">
+                        <label for="import-dem-file">Cargar DEM (Imagen PNG)</label>
+                        <input type="file" id="import-dem-file" accept="image/png" style="display:none;" onchange="window.importDEM(this)">
+                        <button class="btn btn-sm" onclick="document.getElementById('import-dem-file').click()">
+                            Elegir PNG de Altura
+                        </button>
+                        <div style="font-size: 9px; color: var(--text-muted); margin-top: 4px;">
+                            Soporta PNGs de escala de grises y los formatos RGB 16-bit codificados.
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label for="import-osm-file">Cargar OSM (.osm XML)</label>
+                        <input type="file" id="import-osm-file" accept=".osm" style="display:none;" onchange="window.importOSM(this)">
+                        <button class="btn btn-sm" onclick="document.getElementById('import-osm-file').click()">
+                            Elegir mapa.osm
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Exportar Resultados</h3>
+                    <div class="control-row">
+                        <label for="export-res">Resolución DEM de Salida</label>
+                        <select id="export-res">
+                            <option value="4096" selected>4096 x 4096 (Estándar FS25)</option>
+                            <option value="8192">8192 x 8192 (Alta Resolución 8K)</option>
+                        </select>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn btn-primary" onclick="window.exportDEM()">
+                            Exportar DEM (PNG 16 bits)
+                        </button>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn btn-primary" onclick="window.exportOSM()">
+                            Exportar Vectores (map.osm)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Editor Area (2D Grid View) -->
+        <main class="editor-container">
+            <div class="editor-toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Herramienta Activa:</span>
+                    <span id="active-tool-display" style="font-size:12px; font-weight:600; color:var(--accent-hover);">
+                        Elevación (Elevar Pincel)
+                    </span>
+                </div>
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Superficie 2D:</span>
+                    <div class="toggle-group" style="padding: 2px;">
+                        <button class="toggle-btn active btn-sm" style="padding: 4px 10px;" id="btn-view-shading" onclick="window.set2DViewMode('shading')">Sombreado</button>
+                        <button class="toggle-btn btn-sm" style="padding: 4px 10px;" id="btn-view-elevation" onclick="window.set2DViewMode('elevation')">Elevación</button>
+                        <button class="toggle-btn btn-sm" style="padding: 4px 10px;" id="btn-view-grayscale" onclick="window.set2DViewMode('grayscale')">Grises</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Grid Stack -->
+            <div class="canvas-wrapper">
+                <div class="canvas-stack" id="canvas-stack-el">
+                    <!-- Base Canvas showing colors or heightmap values -->
+                    <canvas id="height-canvas"></canvas>
+                    <!-- Overlay Canvas showing OSM lines, selections, interactive brush cursor -->
+                    <canvas id="vector-canvas"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <!-- Vertical Resizer Splitter -->
+        <div class="resizer-3d" id="resizer-3d"></div>
+
+        <!-- Right Preview Panel (Three.js 3D View) -->
+        <aside class="preview-container" id="preview-panel">
+            <div class="preview-header">
+                <h2>Previsualización 3D</h2>
+                <button class="btn btn-sm btn-primary" style="width: auto; padding: 4px 8px;" onclick="window.trigger3DRebuild()">Reconstruir Malla</button>
+            </div>
+            
+            <!-- Three.js Canvas Container -->
+            <div id="three-canvas-container"></div>
+            
+            <!-- 3D Controls HUD -->
+            <div class="preview-controls">
+                <div class="control-row">
+                    <label>Modo de Superficie</label>
+                    <div class="toggle-group" id="render-modes-3d">
+                        <button class="toggle-btn active" onclick="setRenderMode3D('texture')">Textura</button>
+                        <button class="toggle-btn" onclick="setRenderMode3D('elevation')">Elevación</button>
+                        <button class="toggle-btn" onclick="setRenderMode3D('wireframe')">Malla</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label for="exaggeration-slider-3d">Exageración Vertical <span id="val-exaggeration-3d">1.5x</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="exaggeration-slider-3d" min="0.1" max="5.0" step="0.1" value="1.5" oninput="updateExaggeration3D(this.value)">
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                        <span>Mostrar Límite Jugable (4km)</span>
+                        <input type="checkbox" id="toggle-playable-3d" onchange="togglePlayableBox3D(this.checked)" style="width: 16px; height: 16px;">
+                    </label>
+                </div>
+                <button class="btn btn-sm" onclick="resetCamera3D()">Restablecer Cámara</button>
+            </div>
+        </aside>
+        
+        <!-- Bottom Floating HUD Status Bar -->
+        <div class="status-hud">
+            <div class="hud-item">
+                <span class="hud-label">Coordenadas</span>
+                <span class="hud-val" id="hud-coords">X: 0m | Z: 0m</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">Elevación</span>
+                <span class="hud-val" id="hud-elevation" style="color: #60a5fa;">0.0m</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">Ubicación</span>
+                <span class="hud-val" id="hud-zone" style="color: #10b981;">Valle Jugable</span>
+            </div>
+            <div class="hud-item" id="hud-tool-info-box" style="display: none;">
+                <span class="hud-label" id="hud-tool-label">Estado Herramienta</span>
+                <span class="hud-val" id="hud-tool-val" style="color: #a78bfa;">Activo</span>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Spinner Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">PROCESANDO MAPA...</div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-header">Controles & Guía de Uso</div>
+        <div class="modal-body">
+            <p><strong>Edición de Terreno (DEM):</strong></p>
+            <ul style="margin-left: 16px; margin-bottom: 12px; font-size:12px;">
+                <li>Selecciona una herramienta (Elevar, Bajar, Aplanar, Suavizar) en la barra lateral.</li>
+                <li>Haz clic izquierdo y arrastra en el <strong>Editor 2D</strong> central para pintar alturas.</li>
+                <li>Usa la <strong>Herramienta Rampa</strong> haciendo clic en "Fijar Inicio" y "Fijar Fin", define los parámetros y presiona "Aplicar Rampa".</li>
+            </ul>
+            <p><strong>Edición Vectorial (OSM):</strong></p>
+            <ul style="margin-left: 16px; margin-bottom: 12px; font-size:12px;">
+                <li><strong>Editar Nodos:</strong> Haz clic sobre cualquier nodo (círculo) en el mapa para seleccionarlo y arrástralo para reposicionarlo. Selecciona un nodo y presiona <em>Supr / Del</em> para borrarlo.</li>
+                <li><strong>Crear Way:</strong> Haz clic sucesivo sobre el mapa para colocar los nodos. Presiona <em>Enter</em> para cerrar/terminar el trazado del polígono/línea, o <em>Escape</em> para cancelar.</li>
+                <li>Las formas se proyectan automáticamente en la visualización 3D.</li>
+            </ul>
+            <p><strong>Navegación 3D:</strong></p>
+            <ul style="margin-left: 16px; font-size:12px;">
+                <li>Arrastra con el botón izquierdo para rotar la cámara.</li>
+                <li>Arrastra con el botón derecho para desplazar la vista (paneo).</li>
+                <li>Usa la rueda del ratón para hacer zoom.</li>
+            </ul>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-sm btn-primary" style="width:auto;" onclick="window.hideHelp()">¡Entendido!</button>
+        </div>
+    </div>
+
+    <!-- Main JavaScript Modules -->
+    <script type="module" src="editor.js"></script>
+</body>
+</html>
