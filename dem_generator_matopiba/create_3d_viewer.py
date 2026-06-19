@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import os
 import sys
+import json
+import xml.etree.ElementTree as ET
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 def main():
     print("=== DEM 3D Viewer Asset Generator ===")
@@ -54,43 +56,122 @@ def main():
     img_rgb.save(output_rgb_path)
     print(f"Saved RGB heightmap to: {output_rgb_path}")
     
+    # 2.5. Parse OSM way coordinates to build polygon mask for texture coloring
+    osm_path = os.path.join(current_dir, "..", "osm_generator_matopiba", "map.osm")
+    if not os.path.exists(osm_path):
+        osm_path = os.path.join(current_dir, "map.osm")
+        
+    ways_data = []
+    if os.path.exists(osm_path):
+        print(f"Found OSM file at: {osm_path}. Parsing features...")
+        try:
+            tree = ET.parse(osm_path)
+            root = tree.getroot()
+            
+            nodes = {}
+            for node in root.findall("node"):
+                nid = node.get("id")
+                lat = float(node.get("lat"))
+                lon = float(node.get("lon"))
+                nodes[nid] = (lat, lon)
+                
+            for way in root.findall("way"):
+                wid = way.get("id")
+                tags = {tag.get("k"): tag.get("v") for tag in way.findall("tag")}
+                refs = [nd.get("ref") for nd in way.findall("nd")]
+                coords = [nodes[ref] for ref in refs if ref in nodes]
+                
+                if coords:
+                    ways_data.append({
+                        "id": wid,
+                        "tags": tags,
+                        "coords": coords
+                    })
+            print(f"Parsed {len(ways_data)} ways from OSM.")
+        except Exception as e:
+            print(f"Warning: Failed to parse OSM: {e}")
+    else:
+        print("No OSM file found. Skipping feature overlays.")
+        
+    osm_data_json = json.dumps(ways_data)
+    
+    # Generate the base color image (1024x1024)
+    # Default background is a clean light gray
+    bg_color = (204, 204, 204) # #CCCCCC
+    base_color_img = Image.new("RGB", (target_size, target_size), bg_color)
+    draw = ImageDraw.Draw(base_color_img)
+    
+    if ways_data:
+        # Bounding box bounds (same as defined in JS)
+        min_lon = -109.7277558150625
+        max_lon = -109.6863841849375
+        min_lat = 27.061491919529106
+        max_lat = 27.098328080470894
+        
+        # Color definitions for tags
+        # (tag_key, tag_value, hex_color)
+        color_rules = [
+            ("natural", "wood", "#22C55E"),      # Forest green
+            ("landuse", "forest", "#22C55E"),
+            ("landuse", "farmyard", "#22C55E"),   # Forest polygon has landuse=farmyard
+            ("natural", "water", "#2563EB"),     # Water blue
+            ("water", None, "#2563EB"),
+            ("highway", None, "#4B5563"),        # Road gray
+        ]
+        
+        def hex_to_rgb(hex_str):
+            h = hex_str.lstrip('#')
+            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+            
+        for way in ways_data:
+            tags = way.get("tags", {})
+            coords = way.get("coords", [])
+            if len(coords) < 2:
+                continue
+                
+            # Find matching color rule
+            match_color = None
+            for key, val, hex_color in color_rules:
+                if key in tags:
+                    if val is None or tags[key] == val:
+                        match_color = hex_to_rgb(hex_color)
+                        break
+                        
+            if match_color is None:
+                continue
+                
+            # Convert coords to pixel coordinates on the 1024x1024 texture
+            poly_points = []
+            for lat, lon in coords:
+                u = (lon - min_lon) / (max_lon - min_lon)
+                v = (max_lat - lat) / (max_lat - min_lat)
+                # Playable area maps to the middle 512x512 pixels of the 1024x1024 texture
+                px = 256 + u * 512
+                py = 256 + v * 512
+                poly_points.append((px, py))
+                
+            # Check if closed way (polygon) or open way (line)
+            is_closed = len(coords) > 2 and coords[0] == coords[-1]
+            
+            if is_closed:
+                draw.polygon(poly_points, fill=match_color)
+            else:
+                draw.line(poly_points, fill=match_color, width=4)
+                
     # 3. Generate a beautiful custom terrain texture with shaded relief
-    print("Generating shaded relief terrain texture...")
+    print("Generating shaded relief terrain texture (OSM colors shaded, rest grayscale)...")
     try:
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
-        from matplotlib.colors import LinearSegmentedColormap, LightSource
-        
-        # Build custom terrain colormap tailored to this map
-        # Low flat/valley area is around 5m. Plateau is 250m. Mountains go higher.
-        # We will normalize based on actual height range.
-        norm_height = (data_resized - h_min_raw) / (h_max_raw - h_min_raw)
-        
-        # Color definitions: (position, hex_color)
-        # We want:
-        # - lowlands (5m): lush valley green
-        # - slopes (5m -> 250m): gradual transition through light olive, tan
-        # - plateau (250m): warm beige/light brown
-        # - mountains (250m -> peaks): rocky gray, dark grey, white tops
-        colors = [
-            (0.0, '#1E4620'),    # Dark green forest/valley base
-            (0.05, '#2D6A2E'),   # Lush green
-            (0.15, '#658C43'),   # Grass/slopes
-            (0.40, '#B8A174'),   # Sandy clay/hill transition
-            (0.60, '#8E7355'),   # Mountain rock base
-            (0.75, '#5C5247'),   # Dark rock
-            (0.90, '#808080'),   # Gray ridges
-            (1.0, '#FFFFFF')     # Snowy peaks
-        ]
-        
-        # Create colormap
-        cmap = LinearSegmentedColormap.from_list('matopiba_terrain', colors)
+        from matplotlib.colors import LightSource
         
         # Create shaded relief
         ls = LightSource(azdeg=315, altdeg=45)
-        # Grid spacing: 8192 meters / 1024 pixels = 8 meters per pixel.
-        shaded = ls.shade(data_resized / 100.0, cmap=cmap, vert_exag=1.5, dx=8.0, dy=8.0, blend_mode='overlay')
+        # Convert base color image to float [0, 1] array
+        rgb_input = np.array(base_color_img, dtype=np.float32) / 255.0
+        # Apply shading directly on the custom colored image using shade_rgb
+        shaded = ls.shade_rgb(rgb_input, elevation=data_resized / 100.0, blend_mode='overlay', vert_exag=1.5, dx=8.0, dy=8.0)
         
         # Convert float [0, 1] to uint8 [0, 255] and save
         texture_data = (shaded * 255).astype(np.uint8)
@@ -99,14 +180,9 @@ def main():
         print(f"Saved shaded terrain texture to: {output_texture_path}")
     except Exception as e:
         print(f"Warning: Could not generate shaded relief using matplotlib: {e}")
-        print("Falling back to generating a simple grayscale/colored texture.")
-        # Fallback: simple height-based coloring
-        norm = (data_resized - h_min_raw) / (h_max_raw - h_min_raw)
-        # Grayscale fallback
-        fallback_data = (norm * 255).astype(np.uint8)
-        img_texture = Image.fromarray(np.dstack((fallback_data, fallback_data, fallback_data)))
-        img_texture.save(output_texture_path)
-        print(f"Saved fallback texture to: {output_texture_path}")
+        # Fallback: just save the base_color_img directly!
+        base_color_img.save(output_texture_path)
+        print(f"Saved fallback flat colored texture to: {output_texture_path}")
         
     # 4. Generate HTML interactive 3D Viewer
     print("Writing HTML interactive 3D viewer...")
@@ -631,6 +707,14 @@ def main():
                     <span class="switch-slider"></span>
                 </label>
             </div>
+            
+            <div class="switch-container">
+                <span style="font-size: 13px;">Bosques y Usos (OSM)</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-osm" onchange="toggleOsmOverlay(this.checked)" checked>
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
         </div>
 
         <div class="control-group">
@@ -701,6 +785,13 @@ def main():
         const MAP_SIZE = 8192; // 8192m width and length
         const PLAYABLE_SIZE = 4096;
         const PLAYABLE_OFFSET = (MAP_SIZE - PLAYABLE_SIZE) / 2;
+        
+        // OSM Bounds and Data
+        const MIN_LON = -109.7277558150625;
+        const MAX_LON = -109.6863841849375;
+        const MIN_LAT = 27.061491919529106;
+        const MAX_LAT = 27.098328080470894;
+        const OSM_DATA = {osm_data_json};
         
         let container, scene, camera, renderer, controls;
         let terrainGeom, terrainMesh, terrainMaterial;
@@ -838,6 +929,9 @@ def main():
                     
                     // Build auxiliary lines/guides
                     buildGuides();
+                    
+                    // Build OSM overlays
+                    buildOsmOverlays();
                     
                     // Remove loading overlay
                     const loader = document.getElementById('loading-overlay');
@@ -1071,6 +1165,9 @@ def main():
                 if (playableBox) {{
                     playableBox.visible = wasPlayableVisible;
                 }}
+                
+                // Rebuild OSM overlays
+                buildOsmOverlays();
             }}
         }}
 
@@ -1117,6 +1214,78 @@ def main():
 
         function togglePlayableBox(visible) {{
             if (playableBox) playableBox.visible = visible;
+        }}
+
+        let osmGroup = null;
+        
+        function buildOsmOverlays() {{
+            if (osmGroup) {{
+                scene.remove(osmGroup);
+            }}
+            osmGroup = new THREE.Group();
+            
+            if (!OSM_DATA || OSM_DATA.length === 0) return;
+            
+            OSM_DATA.forEach(way => {{
+                const coords = way.coords;
+                if (!coords || coords.length < 2) return;
+                
+                let color = 0xffffff;
+                
+                // Determine color based on tags
+                if (way.tags.natural === 'wood' || way.tags.landuse === 'forest') {{
+                    color = 0x22c55e; // Green for forest
+                }} else if (way.tags.landuse === 'farmyard') {{
+                    color = 0x854d0e; // Brown/clay for farmyard
+                }} else if (way.tags.highway) {{
+                    color = 0x9ca3af; // Gray for road
+                }} else if (way.tags.natural === 'water' || way.tags.water) {{
+                    color = 0x3b82f6; // Blue for water
+                }}
+                
+                const points = [];
+                coords.forEach(coord => {{
+                    const lat = coord[0];
+                    const lon = coord[1];
+                    
+                    const u_play = (lon - MIN_LON) / (MAX_LON - MIN_LON);
+                    const v_play = (MAX_LAT - lat) / (MAX_LAT - MIN_LAT);
+                    
+                    const x = (u_play - 0.5) * PLAYABLE_SIZE;
+                    const z = (0.5 - v_play) * PLAYABLE_SIZE;
+                    
+                    const u_map = (x + MAP_SIZE / 2) / MAP_SIZE;
+                    const v_map = 1 - (z + MAP_SIZE / 2) / MAP_SIZE;
+                    const height = getInterpolatedHeight(u_map, v_map);
+                    
+                    // 3.0 meters above ground to avoid z-fighting
+                    points.push(new THREE.Vector3(x, height * verticalExaggeration + 3.0, z));
+                }});
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({{
+                    color: color,
+                    linewidth: 3,
+                    transparent: true,
+                    opacity: 0.9
+                }});
+                
+                const line = new THREE.LineLoop(geometry, material);
+                osmGroup.add(line);
+            }});
+            
+            const toggleElement = document.getElementById('toggle-osm');
+            if (toggleElement) {{
+                osmGroup.visible = toggleElement.checked;
+            }} else {{
+                osmGroup.visible = true;
+            }}
+            
+            scene.add(osmGroup);
+        }}
+        
+        function toggleOsmOverlay(visible) {{
+            if (osmGroup) osmGroup.visible = visible;
         }}
 
         function updateSunAngle(angle) {{
