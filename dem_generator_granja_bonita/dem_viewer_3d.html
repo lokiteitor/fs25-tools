@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador 3D - DEM Granja Bonita</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js and OrbitControls via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0d0e12;
+            --panel-bg: rgba(18, 20, 26, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #4f46e5;
+            --accent-hover: #6366f1;
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* HUD overlay */
+        .hud-panel {
+            position: absolute;
+            z-index: 10;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hud-panel:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Header Panel */
+        #header-panel {
+            top: 20px;
+            left: 20px;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 16px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Control Panel */
+        #control-panel {
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-row {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* Inputs and Sliders */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--accent-hover);
+        }
+
+        .slider-value {
+            font-size: 12px;
+            width: 35px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* Buttons and Selectors */
+        .btn-toggle-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .btn-toggle {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-toggle.active {
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-toggle:hover:not(.active) {
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            border: none;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Switch checkbox */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .3s;
+            border-radius: 20px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .switch-slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Probe Panel */
+        #probe-panel {
+            bottom: 20px;
+            left: 20px;
+            width: 320px;
+            display: none;
+        }
+
+        .probe-value {
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        /* Help overlay */
+        #help-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            font-weight: bold;
+            font-size: 18px;
+            backdrop-filter: blur(12px);
+        }
+
+        #help-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            z-index: 100;
+            width: 90%;
+            max-width: 450px;
+            background: rgba(18, 20, 26, 0.95);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #help-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .modal-body p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .modal-controls {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .control-key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .close-modal {
+            margin-top: 24px;
+        }
+
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loading-text {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-color);
+        }
+
+        #loading-progress {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">CARGANDO ELEVACIÓN 3D...</div>
+        <div id="loading-progress">Inicializando WebGL</div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- Header / Info Panel -->
+    <div id="header-panel" class="hud-panel">
+        <div class="subtitle">Farming Simulator 25</div>
+        <h1>Granja Bonita 3D</h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Procedural Heightmap & Layout Viewer</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Tamaño Real</div>
+                <div class="stat-value">12.29 × 12.29 km</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Rango Alturas</div>
+                <div class="stat-value">10.0m - 331.5m</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Área Jugable</div>
+                <div class="stat-value">8.19 × 8.19 km</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Vértices 3D</div>
+                <div class="stat-value" id="mesh-vertices">262,144</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div id="control-panel" class="hud-panel">
+        <div class="control-group">
+            <div class="group-title">Visualización</div>
+            <div class="control-row">
+                <label>Modo de Superficie</label>
+                <div class="btn-toggle-group">
+                    <button class="btn-toggle active" onclick="setRenderMode('texture')">Textura</button>
+                    <button class="btn-toggle" onclick="setRenderMode('elevation')">Elevación</button>
+                    <button class="btn-toggle" onclick="setRenderMode('wireframe')">Malla</button>
+                </div>
+            </div>
+            <div class="control-row">
+                <label>Resolución de Malla (Vértices)</label>
+                <div class="btn-toggle-group" style="grid-template-columns: repeat(3, 1fr);">
+                    <button class="btn-toggle" onclick="changeMeshResolution(256)">256²</button>
+                    <button class="btn-toggle active" onclick="changeMeshResolution(512)">512²</button>
+                    <button class="btn-toggle" onclick="changeMeshResolution(1024)">1024²</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="group-title">Parámetros del Relieve</div>
+            <div class="control-row">
+                <label>Exageración Vertical</label>
+                <div class="slider-container">
+                    <input type="range" id="exaggeration-slider" min="0.1" max="5.0" step="0.1" value="1.5" oninput="updateExaggeration(this.value)">
+                    <div class="slider-value" id="exaggeration-val">1.5x</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="group-title">Límites & Guías</div>
+            
+            <div class="switch-container">
+                <span style="font-size: 13px;">Límite Jugable (8.19km)</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-playable" onchange="togglePlayableBox(this.checked)">
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+            
+            <div class="switch-container">
+                <span style="font-size: 13px;">Bosques y Usos (OSM)</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-osm" onchange="toggleOsmOverlay(this.checked)" checked>
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="group-title">Iluminación (Sol)</div>
+            <div class="control-row">
+                <label>Dirección del Sol (Ángulo)</label>
+                <div class="slider-container">
+                    <input type="range" id="sun-angle" min="0" max="360" value="135" oninput="updateSunAngle(this.value)">
+                    <div class="slider-value" id="sun-angle-val">135°</div>
+                </div>
+            </div>
+            <div class="control-row">
+                <label>Altitud del Sol</label>
+                <div class="slider-container">
+                    <input type="range" id="sun-alt" min="10" max="90" value="45" oninput="updateSunAltitude(this.value)">
+                    <div class="slider-value" id="sun-alt-val">45°</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="resetCamera()">Restablecer Cámara</button>
+    </div>
+
+    <!-- Hover Probe Panel -->
+    <div id="probe-panel" class="hud-panel">
+        <div class="group-title" style="margin-bottom: 8px;">Información de Punto</div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 12px; color: var(--text-muted);">Coordenadas X, Z:</span>
+                <span class="probe-value" id="probe-coords">0m, 0m</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 12px; color: var(--text-muted);">Elevación Real:</span>
+                <span class="probe-value" id="probe-height" style="color: #60a5fa; font-weight: bold;">0.0m</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 12px; color: var(--text-muted);">Zona:</span>
+                <span class="probe-value" id="probe-zone" style="font-weight: 600;">Zona de Juego</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="help-btn" onclick="toggleHelp(true)">?</div>
+
+    <div id="help-modal">
+        <div class="modal-title">Navegación 3D</div>
+        <div class="modal-body">
+            <p>Usa tu ratón (o gestos táctiles) para rotar, trasladar y hacer zoom en el modelo del terreno:</p>
+            <div class="modal-controls">
+                <span class="control-key">Clic Izq + Arrastrar</span>
+                <span>Rotar la cámara sobre el terreno</span>
+                
+                <span class="control-key">Rueda del Ratón</span>
+                <span>Acercar y alejar (Zoom)</span>
+                
+                <span class="control-key">Clic Der + Arrastrar</span>
+                <span>Trasladar / Panorámica (Mover la vista)</span>
+            </div>
+            <p style="margin-top: 16px;">Coloca el puntero del ratón sobre el mapa para analizar las coordenadas y elevación del terreno en tiempo real.</p>
+        </div>
+        <button class="btn-primary close-modal" onclick="toggleHelp(false)">¡Entendido!</button>
+    </div>
+
+    <script>
+        const MIN_HEIGHT = 10.0;
+        const MAX_HEIGHT = 331.5;
+        const MAP_SIZE = 12288; // 12288m width and length
+        const PLAYABLE_SIZE = 8192;
+        const PLAYABLE_OFFSET = (MAP_SIZE - PLAYABLE_SIZE) / 2; // 2048m
+        
+        // OSM Bounds and Data (8K playable area georeferencing)
+        const MIN_LON = -95.33855554;
+        const MAX_LON = -95.23782699;
+        const MIN_LAT = 43.02839457;
+        const MAX_LAT = 43.10198456;
+        const OSM_DATA = [{"id": "1", "tags": {"highway": "primary", "name": "Autopista del Norte", "surface": "asphalt"}, "coords": [[43.08913865, -95.23782699], [43.08913865, -95.26362393], [43.08913865, -95.27169697], [43.08913865, -95.2759076], [43.08913865, -95.30047493], [43.08913865, -95.3127586], [43.08913865, -95.32195599], [43.08913865, -95.32318558], [43.08913865, -95.32441518], [43.08913865, -95.32564478], [43.08913865, -95.32687437], [43.08913865, -95.32810397], [43.08913865, -95.33855554]]}, {"id": "2", "tags": {"highway": "primary", "name": "Autopista del Sur", "surface": "asphalt"}, "coords": [[43.04116862, -95.23782699], [43.04116862, -95.24607583], [43.04116862, -95.26011431], [43.04116862, -95.26713355], [43.04116862, -95.27415279], [43.04116862, -95.28117203], [43.04116862, -95.2952105], [43.04116862, -95.29914549], [43.04116862, -95.30222974], [43.04116862, -95.30924898], [43.04116862, -95.31626822], [43.04116862, -95.3303067], [43.04116862, -95.33855554]]}, {"id": "3", "tags": {"highway": "primary", "name": "Camino de la Montana", "surface": "asphalt"}, "coords": [[43.04116862, -95.29914549], [43.04239862, -95.29914549], [43.04362862, -95.29914549], [43.04485862, -95.29914549], [43.04608862, -95.29914549], [43.04731862, -95.29908473], [43.04750174, -95.29906087], [43.04854862, -95.29884865], [43.04977862, -95.29843407], [43.05100862, -95.2978405], [43.05223862, -95.29706745], [43.0533857, -95.29618433], [43.05346862, -95.29611442], [43.05469863, -95.29498089], [43.05592863, -95.29366638], [43.05715863, -95.29217038], [43.05838863, -95.28758359], [43.05926967, -95.28241857], [43.05961863, -95.28055494], [43.06084863, -95.27728904], [43.06207863, -95.27613003], [43.06330863, -95.27511656], [43.06453863, -95.2742441], [43.06515363, -95.27385934], [43.06576863, -95.27350813], [43.06699863, -95.27290411], [43.06822864, -95.27242752], [43.06945864, -95.27207384], [43.07068864, -95.27183854], [43.0710376, -95.27179271], [43.07191864, -95.27171708], [43.07314864, -95.27169697], [43.07437864, -95.27169697], [43.07560864, -95.27169697], [43.07683864, -95.27169697], [43.07692156, -95.27169697], [43.07806864, -95.27169697], [43.07929864, -95.27169697], [43.08052864, -95.27169697], [43.08175865, -95.27169697], [43.08280553, -95.27169697], [43.08298865, -95.27169697], [43.08421865, -95.27169697], [43.08544865, -95.27169697], [43.08667865, -95.27169697], [43.08790865, -95.27169697], [43.08913865, -95.27169697]]}, {"id": "4", "tags": {"landuse": "farmyard", "name": "Bosque de Montana 1", "natural": "wood"}, "coords": [[43.10198456, -95.33855554], [43.10184083, -95.33855554], [43.10140964, -95.33855554], [43.10069099, -95.33855554], [43.09997233, -95.33855554], [43.09925368, -95.33855554], [43.09853503, -95.33855554], [43.09781638, -95.33855554], [43.09709772, -95.33855554], [43.09637907, -95.33855554], [43.09566042, -95.33855554], [43.09494177, -95.33855554], [43.09422312, -95.33855554], [43.09350446, -95.33855554], [43.09278581, -95.33855554], [43.09206716, -95.33855554], [43.09134851, -95.33855554], [43.09062985, -95.33855554], [43.0899112, -95.33855554], [43.08919255, -95.33855554], [43.0884739, -95.33855554], [43.08775525, -95.33855554], [43.08703659, -95.33855554], [43.08631794, -95.33855554], [43.08559929, -95.33855554], [43.08488064, -95.33855554], [43.08416198, -95.33855554], [43.08344333, -95.33855554], [43.08272468, -95.33855554], [43.08200603, -95.33855554], [43.08128738, -95.33855554], [43.08056872, -95.33855554], [43.07985007, -95.33855554], [43.07913142, -95.33855554], [43.07841277, -95.33855554], [43.07769411, -95.33855554], [43.07697546, -95.33855554], [43.07625681, -95.33855554], [43.07553816, -95.33855554], [43.07481951, -95.33855554], [43.07410085, -95.33855554], [43.0733822, -95.33855554], [43.07266355, -95.33855554], [43.0719449, -95.33855554], [43.07122624, -95.33855554], [43.07050759, -95.33855554], [43.06978894, -95.33855554], [43.06907029, -95.33855554], [43.06835164, -95.33855554], [43.06763298, -95.33855554], [43.06691433, -95.33855554], [43.06619568, -95.33855554], [43.06547703, -95.33855554], [43.06475837, -95.33855554], [43.06403972, -95.33855554], [43.06332107, -95.33855554], [43.06260242, -95.33855554], [43.06188377, -95.33855554], [43.06116511, -95.33855554], [43.06044646, -95.33855554], [43.05972781, -95.33855554], [43.05900916, -95.33855554], [43.0582905, -95.33855554], [43.05757185, -95.33855554], [43.0568532, -95.33855554], [43.05613455, -95.33855554], [43.0554159, -95.33855554], [43.05469724, -95.33855554], [43.05397859, -95.33855554], [43.05325994, -95.33855554], [43.05254129, -95.33855554], [43.05182263, -95.33855554], [43.05110398, -95.33855554], [43.05038533, -95.33855554], [43.04966668, -95.33855554], [43.04894803, -95.33855554], [43.04822937, -95.33855554], [43.04751072, -95.33855554], [43.04679207, -95.33855554], [43.04607342, -95.33855554], [43.04535476, -95.33855554], [43.04463611, -95.33855554], [43.04391746, -95.33855554], [43.04319881, -95.33855554], [43.04248016, -95.33855554], [43.0417615, -95.33855554], [43.04104285, -95.33855554], [43.0403242, -95.33855554], [43.03960555, -95.33855554], [43.03888689, -95.33855554], [43.03816824, -95.33855554], [43.03744959, -95.33855554], [43.03673094, -95.33855554], [43.03601229, -95.33855554], [43.03529363, -95.33855554], [43.03457498, -95.33855554], [43.03385633, -95.33855554], [43.03313768, -95.33855554], [43.03241902, -95.33855554], [43.03170037, -95.33855554], [43.03098172, -95.33855554], [43.03026307, -95.33855554], [43.02954442, -95.33855554], [43.02882576, -95.33855554], [43.02882576, -95.3383588], [43.02954442, -95.3383588], [43.03026307, -95.3383588], [43.03098172, -95.3383588], [43.03170037, -95.3383588], [43.03241902, -95.3383588], [43.03313768, -95.3383588], [43.03385633, -95.3383588], [43.03457498, -95.3383588], [43.03529363, -95.3383588], [43.03601229, -95.3383588], [43.03673094, -95.3383588], [43.03744959, -95.3383588], [43.03816824, -95.3383588], [43.03888689, -95.3383588], [43.03960555, -95.3383588], [43.0403242, -95.3383588], [43.04104285, -95.3383588], [43.0417615, -95.3383588], [43.04248016, -95.3383588], [43.04319881, -95.3383588], [43.04391746, -95.3383588], [43.04463611, -95.3383588], [43.04535476, -95.3383588], [43.04607342, -95.3383588], [43.04679207, -95.3383588], [43.04751072, -95.3383588], [43.04822937, -95.3383588], [43.04894803, -95.33816207], [43.04966668, -95.33796533], [43.05038533, -95.3377686], [43.05110398, -95.33737513], [43.05182263, -95.33698166], [43.05254129, -95.33678492], [43.05325994, -95.33619471], [43.05397859, -95.33580124], [43.05469724, -95.3350143], [43.0554159, -95.3344241], [43.05599082, -95.33363715], [43.05670947, -95.33285021], [43.05742812, -95.33206327], [43.05800304, -95.33107959], [43.05843423, -95.33009592], [43.0587217, -95.32911224], [43.05900916, -95.32812856], [43.05929662, -95.32714488], [43.05944035, -95.32616121], [43.05958408, -95.32517753], [43.05972781, -95.32419385], [43.05972781, -95.32321017], [43.05944035, -95.3222265], [43.0587217, -95.32143956], [43.05800304, -95.32065261], [43.05728439, -95.32025914], [43.05656574, -95.31986567], [43.05584709, -95.31966894], [43.05512843, -95.31927547], [43.05440978, -95.31907873], [43.05369113, -95.31868526], [43.05297248, -95.31848852], [43.05225383, -95.31809505], [43.0516789, -95.31711138], [43.05110398, -95.31632443], [43.05081652, -95.31534076], [43.05067279, -95.31435708], [43.05052906, -95.3133734], [43.05052906, -95.31238973], [43.05067279, -95.31140605], [43.05081652, -95.31042237], [43.05096025, -95.30943869], [43.05110398, -95.30845502], [43.05139144, -95.30747134], [43.05182263, -95.30648766], [43.05239756, -95.30550398], [43.05297248, -95.30452031], [43.05369113, -95.30353663], [43.05440978, -95.30255295], [43.0549847, -95.30156928], [43.05570336, -95.30078233], [43.05613455, -95.29979866], [43.05656574, -95.29881498], [43.05699693, -95.2978313], [43.05742812, -95.29704436], [43.05800304, -95.29606068], [43.0582905, -95.29507701], [43.05857797, -95.29409333], [43.05857797, -95.29310965], [43.05857797, -95.29212597], [43.0587217, -95.2911423], [43.0587217, -95.29015862], [43.0587217, -95.28917494], [43.05886543, -95.28819127], [43.05886543, -95.28720759], [43.06059019, -95.28032185], [43.06116511, -95.27933817], [43.06116511, -95.27835449], [43.06145257, -95.27756755], [43.0620275, -95.27796102], [43.06231496, -95.2789447], [43.06245869, -95.27992838], [43.06231496, -95.28091205], [43.06217123, -95.28189573], [43.0620275, -95.28287941], [43.0620275, -95.28386309], [43.0620275, -95.28484676], [43.06217123, -95.28583044], [43.0620275, -95.28681412], [43.0615963, -95.28779779], [43.06145257, -95.28878147], [43.06145257, -95.28976515], [43.06145257, -95.29074883], [43.06130884, -95.2917325], [43.06116511, -95.29271618], [43.06116511, -95.29369986], [43.06102138, -95.29468353], [43.06116511, -95.29566721], [43.06116511, -95.29665089], [43.06145257, -95.29763457], [43.06188377, -95.29861824], [43.0620275, -95.29960192], [43.06217123, -95.3005856], [43.06231496, -95.30156928], [43.06245869, -95.30255295], [43.06245869, -95.30353663], [43.06260242, -95.30452031], [43.06288988, -95.30550398], [43.0634648, -95.30629093], [43.06418345, -95.3072746], [43.06432718, -95.30825828], [43.06475837, -95.30924196], [43.06518957, -95.31022564], [43.06547703, -95.31120931], [43.06590822, -95.31219299], [43.06648314, -95.3127832], [43.06720179, -95.31317667], [43.06792044, -95.31357014], [43.0686391, -95.31396361], [43.06935775, -95.31435708], [43.0700764, -95.31475055], [43.07065132, -95.31534076], [43.07136997, -95.3161277], [43.07208863, -95.31691464], [43.07280728, -95.31770158], [43.07352593, -95.31848852], [43.07424458, -95.31927547], [43.07438831, -95.32025914], [43.07438831, -95.32124282], [43.07438831, -95.3222265], [43.07438831, -95.32321017], [43.07438831, -95.32419385], [43.07424458, -95.32517753], [43.07410085, -95.32616121], [43.07366966, -95.32714488], [43.07309474, -95.32793183], [43.07251982, -95.3289155], [43.0719449, -95.32989918], [43.07122624, -95.33088286], [43.07050759, -95.33186653], [43.06978894, -95.33265348], [43.06921402, -95.33363715], [43.06849537, -95.33462083], [43.06792044, -95.33560451], [43.06720179, -95.33658819], [43.06648314, -95.33737513], [43.06619568, -95.3383588], [43.06691433, -95.3383588], [43.06763298, -95.3383588], [43.06835164, -95.3383588], [43.06907029, -95.3383588], [43.06978894, -95.3383588], [43.07050759, -95.3383588], [43.07122624, -95.3383588], [43.0719449, -95.3383588], [43.07266355, -95.3383588], [43.0733822, -95.3383588], [43.07410085, -95.3383588], [43.07481951, -95.3383588], [43.07553816, -95.3383588], [43.07625681, -95.3383588], [43.07697546, -95.3383588], [43.07769411, -95.3383588], [43.07841277, -95.3383588], [43.07913142, -95.3383588], [43.07985007, -95.3383588], [43.08056872, -95.3383588], [43.08128738, -95.3383588], [43.08200603, -95.3383588], [43.08272468, -95.3383588], [43.08344333, -95.3383588], [43.08416198, -95.3383588], [43.08488064, -95.3383588], [43.08559929, -95.3383588], [43.08631794, -95.3383588], [43.08703659, -95.3383588], [43.08775525, -95.3383588], [43.0884739, -95.3383588], [43.08919255, -95.3383588], [43.0899112, -95.3383588], [43.09062985, -95.3383588], [43.09134851, -95.3383588], [43.09206716, -95.3383588], [43.09278581, -95.3383588], [43.09350446, -95.3383588], [43.09422312, -95.3383588], [43.09494177, -95.3383588], [43.09566042, -95.3383588], [43.09637907, -95.3383588], [43.09709772, -95.3383588], [43.09781638, -95.3383588], [43.09853503, -95.3383588], [43.09925368, -95.3383588], [43.09997233, -95.3383588], [43.10069099, -95.3383588], [43.10140964, -95.3383588], [43.10198456, -95.33855554]]}, {"id": "5", "tags": {"landuse": "farmyard", "name": "Bosque de Montana 2", "natural": "wood"}, "coords": [[43.08171857, -95.23940087], [43.08157484, -95.23959761], [43.08157484, -95.23999108], [43.08157484, -95.24097476], [43.08157484, -95.24195844], [43.08157484, -95.24294211], [43.08157484, -95.24392579], [43.08157484, -95.24490947], [43.08157484, -95.24589314], [43.08143111, -95.24687682], [43.08143111, -95.2478605], [43.08143111, -95.24884418], [43.08128738, -95.24982785], [43.08099991, -95.25081153], [43.08071245, -95.25179521], [43.08042499, -95.25277888], [43.0799938, -95.25376256], [43.07941888, -95.25474624], [43.07884396, -95.25572992], [43.0785565, -95.25671359], [43.07841277, -95.25769727], [43.07826904, -95.25868095], [43.07798158, -95.25966463], [43.07740665, -95.2606483], [43.07683173, -95.26163198], [43.07625681, -95.26261566], [43.07553816, -95.26359933], [43.07481951, -95.26438628], [43.07410085, -95.26517322], [43.0733822, -95.26576342], [43.07266355, -95.26635363], [43.0719449, -95.2667471], [43.07122624, -95.26733731], [43.07050759, -95.26773078], [43.06978894, -95.26832099], [43.06907029, -95.26871446], [43.06835164, -95.26910793], [43.06763298, -95.26969813], [43.06691433, -95.2700916], [43.06619568, -95.27048507], [43.06547703, -95.27107528], [43.06475837, -95.27146875], [43.06403972, -95.27205896], [43.06332107, -95.27264916], [43.06260242, -95.27304264], [43.06188377, -95.27343611], [43.06116511, -95.27422305], [43.06059019, -95.27520673], [43.06001527, -95.2761904], [43.05972781, -95.27717408], [43.05944035, -95.27815776], [43.05915289, -95.27914143], [43.05886543, -95.28012511], [43.05857797, -95.28110879], [43.05857797, -95.28209247], [43.05857797, -95.28307614], [43.05857797, -95.28405982], [43.05814677, -95.28484676], [43.05742812, -95.2856337], [43.05670947, -95.28661738], [43.05599082, -95.28740432], [43.05527216, -95.28799453], [43.05455351, -95.28819127], [43.05383486, -95.288388], [43.05311621, -95.288388], [43.05239756, -95.288388], [43.05182263, -95.28779779], [43.05196636, -95.28681412], [43.05239756, -95.28583044], [43.05297248, -95.28484676], [43.0535474, -95.28386309], [43.05412232, -95.28287941], [43.05455351, -95.28189573], [43.0549847, -95.28091205], [43.0554159, -95.27992838], [43.05570336, -95.2789447], [43.05599082, -95.27796102], [43.05613455, -95.27697734], [43.05642201, -95.27599367], [43.05670947, -95.27500999], [43.0568532, -95.27402631], [43.05728439, -95.27304264], [43.05757185, -95.27205896], [43.05814677, -95.27107528], [43.05857797, -95.2700916], [43.05915289, -95.26910793], [43.05958408, -95.26812425], [43.06001527, -95.26714057], [43.06044646, -95.2661569], [43.06073392, -95.26517322], [43.06102138, -95.26418954], [43.06145257, -95.26320586], [43.06145257, -95.26222219], [43.06174004, -95.26123851], [43.0620275, -95.26025483], [43.06274615, -95.25927115], [43.0634648, -95.25868095], [43.06418345, -95.25828748], [43.0649021, -95.25809074], [43.06562076, -95.25789401], [43.06633941, -95.25789401], [43.06705806, -95.25769727], [43.06777671, -95.25750054], [43.06849537, -95.2573038], [43.06921402, -95.25691033], [43.06993267, -95.25671359], [43.07065132, -95.25651686], [43.07136997, -95.25612339], [43.07208863, -95.25572992], [43.07280728, -95.25494297], [43.07352593, -95.25415603], [43.07410085, -95.25336909], [43.07453204, -95.25238541], [43.07496324, -95.25140174], [43.0752507, -95.25041806], [43.07539443, -95.24943438], [43.07553816, -95.2484507], [43.07568189, -95.24746703], [43.07568189, -95.24648335], [43.07568189, -95.24549967], [43.07582562, -95.244516], [43.07582562, -95.24353232], [43.07582562, -95.24254864], [43.07568189, -95.24156496], [43.07568189, -95.24058129], [43.07553816, -95.23959761], [43.07568189, -95.23861393], [43.07640054, -95.23861393], [43.07711919, -95.23861393], [43.07783784, -95.23861393], [43.0785565, -95.23861393], [43.07927515, -95.23861393], [43.0799938, -95.23861393], [43.08071245, -95.23861393], [43.08143111, -95.23861393], [43.08171857, -95.23940087]]}, {"id": "6", "tags": {"landuse": "farmyard", "name": "Zona Construible 1"}, "coords": [[43.09372006, -95.32822693], [43.08904882, -95.32822693], [43.08904882, -95.32183303], [43.09372006, -95.32183303], [43.09372006, -95.32822693]]}, {"id": "7", "tags": {"landuse": "farmyard", "name": "Zona Construible 2"}, "coords": [[43.09372006, -95.29133903], [43.08904882, -95.29133903], [43.08904882, -95.28494513], [43.09372006, -95.28494513], [43.09372006, -95.29133903]]}, {"id": "8", "tags": {"landuse": "farmyard", "name": "Zona Construible 3"}, "coords": [[43.09372006, -95.25691033], [43.08904882, -95.25691033], [43.08904882, -95.25051643], [43.09372006, -95.25051643], [43.09372006, -95.25691033]]}, {"id": "9", "tags": {"landuse": "farmyard", "name": "Zona Construible 4"}, "coords": [[43.04125845, -95.32945653], [43.03479058, -95.32945653], [43.03479058, -95.32060343], [43.04125845, -95.32060343], [43.04125845, -95.32945653]]}, {"id": "10", "tags": {"landuse": "farmyard", "name": "Zona Construible 5"}, "coords": [[43.04125845, -95.29256863], [43.03479058, -95.29256863], [43.03479058, -95.28371553], [43.04125845, -95.28371553], [43.04125845, -95.29256863]]}, {"id": "11", "tags": {"landuse": "farmyard", "name": "Zona Construible 6"}, "coords": [[43.04125845, -95.25813993], [43.03479058, -95.25813993], [43.03479058, -95.24928683], [43.04125845, -95.24928683], [43.04125845, -95.25813993]]}, {"id": "12", "tags": {"highway": "secondary", "name": "Calle Pueblo Vertical 850", "surface": "asphalt"}, "coords": [[43.08913865, -95.32810397], [43.09003697, -95.32810397], [43.09093528, -95.32810397], [43.0918336, -95.32810397], [43.09273191, -95.32810397], [43.09342062, -95.32810397], [43.09363023, -95.32810397]]}, {"id": "13", "tags": {"highway": "secondary", "name": "Calle Pueblo Vertical 950", "surface": "asphalt"}, "coords": [[43.08913865, -95.32687437], [43.09003697, -95.32687437], [43.09093528, -95.32687437], [43.0918336, -95.32687437], [43.09273191, -95.32687437], [43.09363023, -95.32687437]]}, {"id": "14", "tags": {"highway": "secondary", "name": "Calle Pueblo Vertical 1050", "surface": "asphalt"}, "coords": [[43.08913865, -95.32564478], [43.09003697, -95.32564478], [43.09093528, -95.32564478], [43.0918336, -95.32564478], [43.09273191, -95.32564478], [43.09363023, -95.32564478]]}, {"id": "15", "tags": {"highway": "secondary", "name": "Calle Pueblo Vertical 1150", "surface": "asphalt"}, "coords": [[43.08913865, -95.32441518], [43.09003697, -95.32441518], [43.09093528, -95.32441518], [43.0918336, -95.32441518], [43.09273191, -95.32441518], [43.09363023, -95.32441518]]}, {"id": "16", "tags": {"highway": "secondary", "name": "Calle Pueblo Vertical 1250", "surface": "asphalt"}, "coords": [[43.08913865, -95.32318558], [43.09003697, -95.32318558], [43.09093528, -95.32318558], [43.0918336, -95.32318558], [43.09273191, -95.32318558], [43.09363023, -95.32318558]]}, {"id": "17", "tags": {"highway": "secondary", "name": "Calle Pueblo Vertical 1350", "surface": "asphalt"}, "coords": [[43.08913865, -95.32195599], [43.09003697, -95.32195599], [43.09093528, -95.32195599], [43.0918336, -95.32195599], [43.09273191, -95.32195599], [43.09342062, -95.32195599], [43.09363023, -95.32195599]]}, {"id": "18", "tags": {"highway": "secondary", "name": "Calle Pueblo Horizontal 930", "surface": "asphalt"}, "coords": [[43.09363023, -95.32195599], [43.09363023, -95.32318558], [43.09363023, -95.32441518], [43.09363023, -95.32504227], [43.09363023, -95.32564478], [43.09363023, -95.32687437], [43.09363023, -95.32810397]]}, {"id": "19", "tags": {"highway": "secondary", "name": "Calle Pueblo Horizontal 1030", "surface": "asphalt"}, "coords": [[43.09273191, -95.32195599], [43.09273191, -95.32318558], [43.09273191, -95.32441518], [43.09273191, -95.32564478], [43.09273191, -95.32687437], [43.09273191, -95.32810397]]}, {"id": "20", "tags": {"highway": "secondary", "name": "Calle Pueblo Horizontal 1130", "surface": "asphalt"}, "coords": [[43.0918336, -95.32195599], [43.0918336, -95.32318558], [43.0918336, -95.32441518], [43.0918336, -95.32564478], [43.0918336, -95.32687437], [43.0918336, -95.32810397]]}, {"id": "21", "tags": {"highway": "secondary", "name": "Calle Pueblo Horizontal 1230", "surface": "asphalt"}, "coords": [[43.09093528, -95.32195599], [43.09093528, -95.32318558], [43.09093528, -95.32441518], [43.09093528, -95.32564478], [43.09093528, -95.32687437], [43.09093528, -95.32810397]]}, {"id": "22", "tags": {"highway": "secondary", "name": "Calle Pueblo Horizontal 1330", "surface": "asphalt"}, "coords": [[43.09003697, -95.32195599], [43.09003697, -95.32318558], [43.09003697, -95.32441518], [43.09003697, -95.32564478], [43.09003697, -95.32687437], [43.09003697, -95.32810397]]}, {"id": "23", "tags": {"highway": "secondary", "name": "Calle Pueblo Horizontal 1430", "surface": "asphalt"}, "coords": [[43.08913865, -95.32195599], [43.08913865, -95.32318558], [43.08913865, -95.32441518], [43.08913865, -95.32564478], [43.08913865, -95.32687437], [43.08913865, -95.32810397]]}, {"id": "26", "tags": {"highway": "track", "name": "Camino de Terraceria 3", "surface": "dirt"}, "coords": [[43.09342062, -95.32810397], [43.09342062, -95.33732594]]}, {"id": "27", "tags": {"highway": "track", "name": "Camino de Terraceria 4", "surface": "dirt"}, "coords": [[43.09342062, -95.29145051], [43.09342062, -95.30047493], [43.09342062, -95.3127586], [43.09342062, -95.32195599]]}, {"id": "28", "tags": {"highway": "track", "name": "Camino de Terraceria 5", "surface": "dirt"}, "coords": [[43.09342062, -95.25701319], [43.09342062, -95.26362393], [43.09342062, -95.2759076], [43.09342062, -95.28480903]]}, {"id": "29", "tags": {"highway": "track", "name": "Camino de Terraceria 6", "surface": "dirt"}, "coords": [[43.09342062, -95.23905659], [43.09342062, -95.25037171]]}, {"id": "30", "tags": {"highway": "track", "name": "Camino de Terraceria 7", "surface": "dirt"}, "coords": [[43.09363023, -95.32504227], [43.10108624, -95.32504227]]}, {"id": "31", "tags": {"highway": "track", "name": "Camino de Terraceria 8", "surface": "dirt"}, "coords": [[43.08913865, -95.3127586], [43.09342062, -95.3127586], [43.10108624, -95.3127586]]}, {"id": "32", "tags": {"highway": "track", "name": "Camino de Terraceria 9", "surface": "dirt"}, "coords": [[43.08913865, -95.30047493], [43.09342062, -95.30047493], [43.10108624, -95.30047493]]}, {"id": "33", "tags": {"highway": "track", "name": "Camino de Terraceria 10", "surface": "dirt"}, "coords": [[43.09378939, -95.28819127], [43.10108624, -95.28819127]]}, {"id": "34", "tags": {"highway": "track", "name": "Camino de Terraceria 11", "surface": "dirt"}, "coords": [[43.08913865, -95.2759076], [43.09342062, -95.2759076], [43.10108624, -95.2759076]]}, {"id": "35", "tags": {"highway": "track", "name": "Camino de Terraceria 12", "surface": "dirt"}, "coords": [[43.08913865, -95.26362393], [43.09342062, -95.26362393], [43.10108624, -95.26362393]]}, {"id": "36", "tags": {"highway": "track", "name": "Camino de Terraceria 13", "surface": "dirt"}, "coords": [[43.09378939, -95.25134026], [43.10108624, -95.25134026]]}, {"id": "37", "tags": {"highway": "track", "name": "Camino de Terraceria 14", "surface": "dirt"}, "coords": [[43.08280553, -95.27169697], [43.08280553, -95.30428398], [43.08280553, -95.30428398], [43.08280553, -95.33668655]]}, {"id": "38", "tags": {"highway": "track", "name": "Camino de Terraceria 15", "surface": "dirt"}, "coords": [[43.08280553, -95.23949924], [43.08280553, -95.25550588], [43.08280553, -95.27169697]]}, {"id": "39", "tags": {"highway": "track", "name": "Camino de Terraceria 16", "surface": "dirt"}, "coords": [[43.07692156, -95.27169697], [43.07692156, -95.30428398], [43.07692156, -95.33668655]]}, {"id": "40", "tags": {"highway": "track", "name": "Camino de Terraceria 17", "surface": "dirt"}, "coords": [[43.07692156, -95.2631075], [43.07692156, -95.27169697]]}, {"id": "41", "tags": {"highway": "track", "name": "Camino de Terraceria 18", "surface": "dirt"}, "coords": [[43.0710376, -95.27179271], [43.0710376, -95.31425871]]}, {"id": "42", "tags": {"highway": "track", "name": "Camino de Terraceria 19", "surface": "dirt"}, "coords": [[43.0710376, -95.26900956], [43.0710376, -95.27179271]]}, {"id": "48", "tags": {"highway": "track", "name": "Camino de Terraceria 25", "surface": "dirt"}, "coords": [[43.04750174, -95.29906087], [43.04750174, -95.31796593], [43.04750174, -95.33668655]]}, {"id": "49", "tags": {"highway": "track", "name": "Camino de Terraceria 26", "surface": "dirt"}, "coords": [[43.04750174, -95.23949924], [43.04750174, -95.26918784], [43.04750174, -95.29906087]]}, {"id": "50", "tags": {"highway": "track", "name": "Camino de Terraceria 27", "surface": "dirt"}, "coords": [[43.08280553, -95.30428398], [43.08280553, -95.30428398], [43.08868949, -95.30428398]]}, {"id": "51", "tags": {"highway": "track", "name": "Camino de Terraceria 28", "surface": "dirt"}, "coords": [[43.08280553, -95.25550588], [43.08868949, -95.25550588]]}, {"id": "52", "tags": {"highway": "track", "name": "Camino de Terraceria 29", "surface": "dirt"}, "coords": [[43.07692156, -95.30428398], [43.08280553, -95.30428398], [43.08280553, -95.30428398]]}, {"id": "65", "tags": {"highway": "track", "name": "Camino de Terraceria 42", "surface": "dirt"}, "coords": [[43.04161777, -95.31800824], [43.04750174, -95.31796593]]}, {"id": "66", "tags": {"highway": "track", "name": "Camino de Terraceria 43", "surface": "dirt"}, "coords": [[43.04161777, -95.26923015], [43.04750174, -95.26918784]]}, {"id": "67", "tags": {"highway": "track", "name": "Camino de Terraceria 44", "surface": "dirt"}, "coords": [[43.03843414, -95.32957755], [43.03843414, -95.3303067], [43.03843414, -95.33732594]]}, {"id": "68", "tags": {"highway": "track", "name": "Camino de Terraceria 45", "surface": "dirt"}, "coords": [[43.03843414, -95.29268042], [43.03843414, -95.2952105], [43.03843414, -95.30222974], [43.03843414, -95.30924898], [43.03843414, -95.31626822], [43.03843414, -95.32047625]]}, {"id": "69", "tags": {"highway": "track", "name": "Camino de Terraceria 46", "surface": "dirt"}, "coords": [[43.03843414, -95.25824309], [43.03843414, -95.26011431], [43.03843414, -95.26713355], [43.03843414, -95.27415279], [43.03843414, -95.28117203], [43.03843414, -95.28357912]]}, {"id": "70", "tags": {"highway": "track", "name": "Camino de Terraceria 47", "surface": "dirt"}, "coords": [[43.03843414, -95.23905659], [43.03843414, -95.24607583], [43.03843414, -95.2491418]]}, {"id": "71", "tags": {"highway": "track", "name": "Camino de Terraceria 48", "surface": "dirt"}, "coords": [[43.03614883, -95.32957755], [43.03614883, -95.3303067], [43.03614883, -95.33732594]]}, {"id": "72", "tags": {"highway": "track", "name": "Camino de Terraceria 49", "surface": "dirt"}, "coords": [[43.03614883, -95.29268042], [43.03614883, -95.2952105], [43.03614883, -95.30222974], [43.03614883, -95.30924898], [43.03614883, -95.31626822], [43.03614883, -95.32047625]]}, {"id": "73", "tags": {"highway": "track", "name": "Camino de Terraceria 50", "surface": "dirt"}, "coords": [[43.03614883, -95.25824309], [43.03614883, -95.26011431], [43.03614883, -95.26713355], [43.03614883, -95.27415279], [43.03614883, -95.28117203], [43.03614883, -95.28357912]]}, {"id": "74", "tags": {"highway": "track", "name": "Camino de Terraceria 51", "surface": "dirt"}, "coords": [[43.03614883, -95.23905659], [43.03614883, -95.24606704], [43.03614883, -95.2491418]]}, {"id": "75", "tags": {"highway": "track", "name": "Camino de Terraceria 52", "surface": "dirt"}, "coords": [[43.03383595, -95.25309507], [43.03386352, -95.26011431], [43.03386352, -95.26713355], [43.03386352, -95.27415279], [43.03386352, -95.28117203], [43.03386352, -95.28819127], [43.03386352, -95.2952105], [43.03386352, -95.30222974], [43.03386352, -95.30924898], [43.03386352, -95.31626822], [43.03386352, -95.32328746], [43.03386352, -95.3303067], [43.03386352, -95.33732594]]}, {"id": "76", "tags": {"highway": "track", "name": "Camino de Terraceria 53", "surface": "dirt"}, "coords": [[43.03157809101, -95.25309507], [43.0315782, -95.26011431], [43.0315782, -95.26713355], [43.0315782, -95.27415279], [43.0315782, -95.28117203], [43.0315782, -95.28819127], [43.0315782, -95.2952105], [43.0315782, -95.30222974], [43.0315782, -95.30924898], [43.0315782, -95.31626822], [43.0315782, -95.32328746], [43.0315782, -95.3303067], [43.0315782, -95.33732594]]}, {"id": "78", "tags": {"highway": "track", "name": "Camino de Terraceria 55", "surface": "dirt"}, "coords": [[43.02929289, -95.3303067], [43.0315782, -95.3303067], [43.03386352, -95.3303067], [43.03614883, -95.3303067], [43.03843414, -95.3303067], [43.04116862, -95.3303067]]}, {"id": "79", "tags": {"highway": "track", "name": "Camino de Terraceria 56", "surface": "dirt"}, "coords": [[43.02929289, -95.32328746], [43.0315782, -95.32328746], [43.03386352, -95.32328746], [43.03471268, -95.32328746]]}, {"id": "80", "tags": {"highway": "track", "name": "Camino de Terraceria 57", "surface": "dirt"}, "coords": [[43.02929289, -95.31626822], [43.0315782, -95.31626822], [43.03386352, -95.31626822], [43.03614883, -95.31626822], [43.03843414, -95.31626822], [43.04116862, -95.31626822]]}, {"id": "81", "tags": {"highway": "track", "name": "Camino de Terraceria 58", "surface": "dirt"}, "coords": [[43.02929289, -95.30924898], [43.0315782, -95.30924898], [43.03386352, -95.30924898], [43.03614883, -95.30924898], [43.03843414, -95.30924898], [43.04116862, -95.30924898]]}, {"id": "82", "tags": {"highway": "track", "name": "Camino de Terraceria 59", "surface": "dirt"}, "coords": [[43.02929289, -95.30222974], [43.0315782, -95.30222974], [43.03386352, -95.30222974], [43.03614883, -95.30222974], [43.03843414, -95.30222974], [43.04116862, -95.30222974]]}, {"id": "83", "tags": {"highway": "track", "name": "Camino de Terraceria 60", "surface": "dirt"}, "coords": [[43.02929289, -95.2952105], [43.0315782, -95.2952105], [43.03386352, -95.2952105], [43.03614883, -95.2952105], [43.03843414, -95.2952105], [43.04116862, -95.2952105]]}, {"id": "84", "tags": {"highway": "track", "name": "Camino de Terraceria 61", "surface": "dirt"}, "coords": [[43.02929289, -95.28819127], [43.0315782, -95.28819127], [43.03386352, -95.28819127], [43.03471268, -95.28819127]]}, {"id": "85", "tags": {"highway": "track", "name": "Camino de Terraceria 62", "surface": "dirt"}, "coords": [[43.02929289, -95.28117203], [43.0315782, -95.28117203], [43.03386352, -95.28117203], [43.03614883, -95.28117203], [43.03843414, -95.28117203], [43.04116862, -95.28117203]]}, {"id": "86", "tags": {"highway": "track", "name": "Camino de Terraceria 63", "surface": "dirt"}, "coords": [[43.02929289, -95.27415279], [43.0315782, -95.27415279], [43.03386352, -95.27415279], [43.03614883, -95.27415279], [43.03843414, -95.27415279], [43.04116862, -95.27415279]]}, {"id": "87", "tags": {"highway": "track", "name": "Camino de Terraceria 64", "surface": "dirt"}, "coords": [[43.02929289, -95.26713355], [43.0315782, -95.26713355], [43.03386352, -95.26713355], [43.03614883, -95.26713355], [43.03843414, -95.26713355], [43.04116862, -95.26713355]]}, {"id": "88", "tags": {"highway": "track", "name": "Camino de Terraceria 65", "surface": "dirt"}, "coords": [[43.02929289, -95.26011431], [43.0315782, -95.26011431], [43.03386352, -95.26011431], [43.03614883, -95.26011431], [43.03843414, -95.26011431], [43.04116862, -95.26011431]]}, {"id": "89", "tags": {"highway": "track", "name": "Camino de Terraceria 66", "surface": "dirt"}, "coords": [[43.02929289, -95.25309507], [43.03157809101, -95.25309507], [43.03383595, -95.25309507], [43.03471268, -95.25309507]]}, {"id": "90", "tags": {"highway": "track", "name": "Camino de Terraceria 67", "surface": "dirt"}, "coords": [[43.03614883, -95.24606704], [43.03843414, -95.24607583], [43.04116862, -95.24607583]]}, {"id": "92", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 2"}, "coords": [[43.1009515, -95.32485783], [43.09738818, -95.32485783], [43.09738818, -95.31294304], [43.1009515, -95.31294304], [43.1009515, -95.32485783]]}, {"id": "93", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 3"}, "coords": [[43.1009515, -95.31257416], [43.09738818, -95.31257416], [43.09738818, -95.30065937], [43.1009515, -95.30065937], [43.1009515, -95.31257416]]}, {"id": "94", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 4"}, "coords": [[43.09711869, -95.31257416], [43.09355537, -95.31257416], [43.09355537, -95.30065937], [43.09711869, -95.30065937], [43.09711869, -95.31257416]]}, {"id": "95", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 5"}, "coords": [[43.09328587, -95.31257416], [43.08972256, -95.31257416], [43.08972256, -95.30065937], [43.09328587, -95.30065937], [43.09328587, -95.31257416]]}, {"id": "96", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 6"}, "coords": [[43.1009515, -95.3002905], [43.09738818, -95.3002905], [43.09738818, -95.2883757], [43.1009515, -95.2883757], [43.1009515, -95.3002905]]}, {"id": "97", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 7"}, "coords": [[43.1009515, -95.28800683], [43.09738818, -95.28800683], [43.09738818, -95.27609204], [43.1009515, -95.27609204], [43.1009515, -95.28800683]]}, {"id": "98", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 8"}, "coords": [[43.1009515, -95.27572316], [43.09738818, -95.27572316], [43.09738818, -95.26380837], [43.1009515, -95.26380837], [43.1009515, -95.27572316]]}, {"id": "99", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 9"}, "coords": [[43.09711869, -95.27572316], [43.09355537, -95.27572316], [43.09355537, -95.26380837], [43.09711869, -95.26380837], [43.09711869, -95.27572316]]}, {"id": "100", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 10"}, "coords": [[43.09328587, -95.27572316], [43.08972256, -95.27572316], [43.08972256, -95.26380837], [43.09328587, -95.26380837], [43.09328587, -95.27572316]]}, {"id": "101", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 11"}, "coords": [[43.1009515, -95.26343949], [43.09738818, -95.26343949], [43.09738818, -95.2515247], [43.1009515, -95.2515247], [43.1009515, -95.26343949]]}, {"id": "102", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 12"}, "coords": [[43.1009515, -95.25115582], [43.09738818, -95.25115582], [43.09738818, -95.23925332], [43.1009515, -95.23925332], [43.1009515, -95.25115582]]}, {"id": "103", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 13"}, "coords": [[43.08855475, -95.33650211], [43.08294028, -95.33650211], [43.08294028, -95.30446842], [43.08855475, -95.30446842], [43.08855475, -95.33650211]]}, {"id": "104", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 14"}, "coords": [[43.08855475, -95.30409954], [43.08294028, -95.30409954], [43.08294028, -95.27206584], [43.08855475, -95.27206584], [43.08855475, -95.30409954]]}, {"id": "105", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 15"}, "coords": [[43.08855475, -95.27132809], [43.08294028, -95.27132809], [43.08294028, -95.25569032], [43.08855475, -95.25569032], [43.08855475, -95.27132809]]}, {"id": "106", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 16"}, "coords": [[43.08855475, -95.25532144], [43.08294028, -95.25532144], [43.08294028, -95.23968368], [43.08855475, -95.23968368], [43.08855475, -95.25532144]]}, {"id": "107", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 17"}, "coords": [[43.08267078, -95.33650211], [43.07705631, -95.33650211], [43.07705631, -95.30446842], [43.08267078, -95.30446842], [43.08267078, -95.33650211]]}, {"id": "108", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 18"}, "coords": [[43.08267078, -95.30409954], [43.07705631, -95.30409954], [43.07705631, -95.27206584], [43.08267078, -95.27206584], [43.08267078, -95.30409954]]}, {"id": "109", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 19"}, "coords": [[43.08267078, -95.27132809], [43.07705631, -95.27132809], [43.07705631, -95.26749445], [43.08267078, -95.26749445], [43.08267078, -95.27132809]]}, {"id": "110", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 20"}, "coords": [[43.08267078, -95.26712557], [43.07705631, -95.26712557], [43.07705631, -95.26329194], [43.08267078, -95.26329194], [43.08267078, -95.26712557]]}, {"id": "111", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 21"}, "coords": [[43.07678682, -95.31407427], [43.07117235, -95.31407427], [43.07117235, -95.29330237], [43.07678682, -95.29330237], [43.07678682, -95.31407427]]}, {"id": "112", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 22"}, "coords": [[43.07678682, -95.29293349], [43.07117235, -95.29293349], [43.07117235, -95.27216159], [43.07678682, -95.27216159], [43.07678682, -95.29293349]]}, {"id": "115", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 25"}, "coords": [[43.07090285, -95.30836894], [43.06528838, -95.30836894], [43.06528838, -95.29148302], [43.07090285, -95.29148302], [43.07090285, -95.30836894]]}, {"id": "116", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 26"}, "coords": [[43.07090285, -95.29111414], [43.06528838, -95.29111414], [43.06528838, -95.27422821], [43.07090285, -95.27422821], [43.07090285, -95.29111414]]}, {"id": "121", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 31"}, "coords": [[43.04736699, -95.33650211], [43.04175252, -95.33650211], [43.04175252, -95.31819268], [43.04736699, -95.31819268], [43.04736699, -95.33650211]]}, {"id": "122", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 32"}, "coords": [[43.04736699, -95.3178238], [43.04175252, -95.3178238], [43.04175252, -95.29951437], [43.04736699, -95.29951437], [43.04736699, -95.3178238]]}, {"id": "123", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 33"}, "coords": [[43.04736699, -95.298692], [43.04175252, -95.298692], [43.04175252, -95.26937228], [43.04736699, -95.26937228], [43.04736699, -95.298692]]}, {"id": "124", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 34"}, "coords": [[43.04736699, -95.2690034], [43.04175252, -95.2690034], [43.04175252, -95.23968368], [43.04736699, -95.23968368], [43.04736699, -95.2690034]]}, {"id": "125", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 35"}, "coords": [[43.04058471, -95.33693247], [43.03856889, -95.33693247], [43.03856889, -95.33049114], [43.04058471, -95.33049114], [43.04058471, -95.33693247]]}, {"id": "126", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 36"}, "coords": [[43.0382994, -95.33693247], [43.03628358, -95.33693247], [43.03628358, -95.33049114], [43.0382994, -95.33049114], [43.0382994, -95.33693247]]}, {"id": "127", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 37"}, "coords": [[43.03601408, -95.33693247], [43.03399826, -95.33693247], [43.03399826, -95.33049114], [43.03601408, -95.33049114], [43.03601408, -95.33693247]]}, {"id": "128", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 38"}, "coords": [[43.03372877, -95.33693247], [43.03171295, -95.33693247], [43.03171295, -95.33049114], [43.03372877, -95.33049114], [43.03372877, -95.33693247]]}, {"id": "129", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 39"}, "coords": [[43.03144345, -95.33693247], [43.02942763, -95.33693247], [43.02942763, -95.33049114], [43.03144345, -95.33049114], [43.03144345, -95.33693247]]}, {"id": "130", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 40"}, "coords": [[43.03372877, -95.33012226], [43.03171295, -95.33012226], [43.03171295, -95.3234719], [43.03372877, -95.3234719], [43.03372877, -95.33012226]]}, {"id": "131", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 41"}, "coords": [[43.03144345, -95.33012226], [43.02942763, -95.33012226], [43.02942763, -95.3234719], [43.03144345, -95.3234719], [43.03144345, -95.33012226]]}, {"id": "132", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 42"}, "coords": [[43.03372877, -95.32310302], [43.03171295, -95.32310302], [43.03171295, -95.31645266], [43.03372877, -95.31645266], [43.03372877, -95.32310302]]}, {"id": "133", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 43"}, "coords": [[43.03144345, -95.32310302], [43.02942763, -95.32310302], [43.02942763, -95.31645266], [43.03144345, -95.31645266], [43.03144345, -95.32310302]]}, {"id": "134", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 44"}, "coords": [[43.04058471, -95.31608378], [43.03856889, -95.31608378], [43.03856889, -95.30943342], [43.04058471, -95.30943342], [43.04058471, -95.31608378]]}, {"id": "135", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 45"}, "coords": [[43.0382994, -95.31608378], [43.03628358, -95.31608378], [43.03628358, -95.30943342], [43.0382994, -95.30943342], [43.0382994, -95.31608378]]}, {"id": "136", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 46"}, "coords": [[43.03601408, -95.31608378], [43.03399826, -95.31608378], [43.03399826, -95.30943342], [43.03601408, -95.30943342], [43.03601408, -95.31608378]]}, {"id": "137", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 47"}, "coords": [[43.03372877, -95.31608378], [43.03171295, -95.31608378], [43.03171295, -95.30943342], [43.03372877, -95.30943342], [43.03372877, -95.31608378]]}, {"id": "138", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 48"}, "coords": [[43.03144345, -95.31608378], [43.02942763, -95.31608378], [43.02942763, -95.30943342], [43.03144345, -95.30943342], [43.03144345, -95.31608378]]}, {"id": "139", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 49"}, "coords": [[43.04058471, -95.30906454], [43.03856889, -95.30906454], [43.03856889, -95.30241418], [43.04058471, -95.30241418], [43.04058471, -95.30906454]]}, {"id": "140", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 50"}, "coords": [[43.0382994, -95.30906454], [43.03628358, -95.30906454], [43.03628358, -95.30241418], [43.0382994, -95.30241418], [43.0382994, -95.30906454]]}, {"id": "141", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 51"}, "coords": [[43.03601408, -95.30906454], [43.03399826, -95.30906454], [43.03399826, -95.30241418], [43.03601408, -95.30241418], [43.03601408, -95.30906454]]}, {"id": "142", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 52"}, "coords": [[43.03372877, -95.30906454], [43.03171295, -95.30906454], [43.03171295, -95.30241418], [43.03372877, -95.30241418], [43.03372877, -95.30906454]]}, {"id": "143", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 53"}, "coords": [[43.03144345, -95.30906454], [43.02942763, -95.30906454], [43.02942763, -95.30241418], [43.03144345, -95.30241418], [43.03144345, -95.30906454]]}, {"id": "144", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 54"}, "coords": [[43.04058471, -95.30204531], [43.03856889, -95.30204531], [43.03856889, -95.29539494], [43.04058471, -95.29539494], [43.04058471, -95.30204531]]}, {"id": "145", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 55"}, "coords": [[43.0382994, -95.30204531], [43.03628358, -95.30204531], [43.03628358, -95.29539494], [43.0382994, -95.29539494], [43.0382994, -95.30204531]]}, {"id": "146", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 56"}, "coords": [[43.03601408, -95.30204531], [43.03399826, -95.30204531], [43.03399826, -95.29539494], [43.03601408, -95.29539494], [43.03601408, -95.30204531]]}, {"id": "147", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 57"}, "coords": [[43.03372877, -95.30204531], [43.03171295, -95.30204531], [43.03171295, -95.29539494], [43.03372877, -95.29539494], [43.03372877, -95.30204531]]}, {"id": "148", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 58"}, "coords": [[43.03144345, -95.30204531], [43.02942763, -95.30204531], [43.02942763, -95.29539494], [43.03144345, -95.29539494], [43.03144345, -95.30204531]]}, {"id": "149", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 59"}, "coords": [[43.03372877, -95.29502607], [43.03171295, -95.29502607], [43.03171295, -95.2883757], [43.03372877, -95.2883757], [43.03372877, -95.29502607]]}, {"id": "150", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 60"}, "coords": [[43.03144345, -95.29502607], [43.02942763, -95.29502607], [43.02942763, -95.2883757], [43.03144345, -95.2883757], [43.03144345, -95.29502607]]}, {"id": "151", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 61"}, "coords": [[43.03372877, -95.28800683], [43.03171295, -95.28800683], [43.03171295, -95.28135646], [43.03372877, -95.28135646], [43.03372877, -95.28800683]]}, {"id": "152", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 62"}, "coords": [[43.03144345, -95.28800683], [43.02942763, -95.28800683], [43.02942763, -95.28135646], [43.03144345, -95.28135646], [43.03144345, -95.28800683]]}, {"id": "153", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 63"}, "coords": [[43.04058471, -95.28098759], [43.03856889, -95.28098759], [43.03856889, -95.27433723], [43.04058471, -95.27433723], [43.04058471, -95.28098759]]}, {"id": "154", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 64"}, "coords": [[43.0382994, -95.28098759], [43.03628358, -95.28098759], [43.03628358, -95.27433723], [43.0382994, -95.27433723], [43.0382994, -95.28098759]]}, {"id": "155", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 65"}, "coords": [[43.03601408, -95.28098759], [43.03399826, -95.28098759], [43.03399826, -95.27433723], [43.03601408, -95.27433723], [43.03601408, -95.28098759]]}, {"id": "156", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 66"}, "coords": [[43.03372877, -95.28098759], [43.03171295, -95.28098759], [43.03171295, -95.27433723], [43.03372877, -95.27433723], [43.03372877, -95.28098759]]}, {"id": "157", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 67"}, "coords": [[43.03144345, -95.28098759], [43.02942763, -95.28098759], [43.02942763, -95.27433723], [43.03144345, -95.27433723], [43.03144345, -95.28098759]]}, {"id": "158", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 68"}, "coords": [[43.04058471, -95.27396835], [43.03856889, -95.27396835], [43.03856889, -95.26731799], [43.04058471, -95.26731799], [43.04058471, -95.27396835]]}, {"id": "159", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 69"}, "coords": [[43.0382994, -95.27396835], [43.03628358, -95.27396835], [43.03628358, -95.26731799], [43.0382994, -95.26731799], [43.0382994, -95.27396835]]}, {"id": "160", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 70"}, "coords": [[43.03601408, -95.27396835], [43.03399826, -95.27396835], [43.03399826, -95.26731799], [43.03601408, -95.26731799], [43.03601408, -95.27396835]]}, {"id": "161", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 71"}, "coords": [[43.03372877, -95.27396835], [43.03171295, -95.27396835], [43.03171295, -95.26731799], [43.03372877, -95.26731799], [43.03372877, -95.27396835]]}, {"id": "162", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 72"}, "coords": [[43.03144345, -95.27396835], [43.02942763, -95.27396835], [43.02942763, -95.26731799], [43.03144345, -95.26731799], [43.03144345, -95.27396835]]}, {"id": "163", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 73"}, "coords": [[43.04058471, -95.26694911], [43.03856889, -95.26694911], [43.03856889, -95.26029875], [43.04058471, -95.26029875], [43.04058471, -95.26694911]]}, {"id": "164", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 74"}, "coords": [[43.0382994, -95.26694911], [43.03628358, -95.26694911], [43.03628358, -95.26029875], [43.0382994, -95.26029875], [43.0382994, -95.26694911]]}, {"id": "165", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 75"}, "coords": [[43.03601408, -95.26694911], [43.03399826, -95.26694911], [43.03399826, -95.26029875], [43.03601408, -95.26029875], [43.03601408, -95.26694911]]}, {"id": "166", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 76"}, "coords": [[43.03372877, -95.26694911], [43.03171295, -95.26694911], [43.03171295, -95.26029875], [43.03372877, -95.26029875], [43.03372877, -95.26694911]]}, {"id": "167", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 77"}, "coords": [[43.03144345, -95.26694911], [43.02942763, -95.26694911], [43.02942763, -95.26029875], [43.03144345, -95.26029875], [43.03144345, -95.26694911]]}, {"id": "168", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 78"}, "coords": [[43.03372877, -95.25992987], [43.03171295, -95.25992987], [43.03171295, -95.25327951], [43.03372877, -95.25327951], [43.03372877, -95.25992987]]}, {"id": "169", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 79"}, "coords": [[43.03144345, -95.25992987], [43.02942763, -95.25992987], [43.02942763, -95.25327951], [43.03144345, -95.25327951], [43.03144345, -95.25992987]]}, {"id": "170", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 80"}, "coords": [[43.04058471, -95.24589139], [43.03856889, -95.24589139], [43.03856889, -95.23925332], [43.04058471, -95.23925332], [43.04058471, -95.24589139]]}, {"id": "171", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 81"}, "coords": [[43.0382994, -95.24589139], [43.03628358, -95.24589139], [43.03628358, -95.23925332], [43.0382994, -95.23925332], [43.0382994, -95.24589139]]}, {"id": "-1", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 82"}, "coords": [[43.09636638427, -95.29294393902], [43.09403909051, -95.29294393902], [43.09403909051, -95.29173388333], [43.09636638427, -95.29173388333], [43.09636638427, -95.29294393902]]}, {"id": "-2", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 83"}, "coords": [[43.09694356067, -95.28109352137], [43.09548203149, -95.28109352137], [43.09548203149, -95.27948845176], [43.09694356067, -95.27948845176], [43.09694356067, -95.28109352137]]}, {"id": "-3", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 84"}, "coords": [[43.10184956, -95.28464864667], [43.10125379541, -95.28464864667], [43.10125379541, -95.28146352137], [43.10184956, -95.28146352137], [43.10184956, -95.28464864667]]}, {"id": "-4", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 85"}, "coords": [[43.06375591812, -95.25344254686], [43.06258297714, -95.25344254686], [43.06258297714, -95.25183747725], [43.06375591812, -95.25183747725], [43.06375591812, -95.25344254686]]}, {"id": "-5", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 86"}, "coords": [[43.09261473773, -95.2467273102], [43.09086462035, -95.2467273102], [43.09086462035, -95.24591226843], [43.09261473773, -95.24591226843], [43.09261473773, -95.2467273102]]}, {"id": "-6", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 87"}, "coords": [[43.04470909718, -95.33758051216], [43.0429589798, -95.33758051216], [43.0429589798, -95.33676547039], [43.04470909718, -95.33676547039], [43.04470909718, -95.33758051216]]}, {"id": "-7", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 88"}, "coords": [[43.06779615286, -95.27200820118], [43.06460309451, -95.27200820118], [43.06460309451, -95.27198318725], [43.06779615286, -95.27198318725], [43.06779615286, -95.27200820118]]}, {"id": "-8", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 89"}, "coords": [[43.0504808611, -95.31032455157], [43.04959650831, -95.31032455157], [43.04959650831, -95.30911449588], [43.0504808611, -95.30911449588], [43.0504808611, -95.31032455157]]}, {"id": "-9", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 90"}, "coords": [[43.10184956, -95.27832842392], [43.10125379541, -95.27832842392], [43.10125379541, -95.27672335431], [43.10184956, -95.27672335431], [43.10184956, -95.27832842392]]}, {"id": "-10", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 91"}, "coords": [[43.0868429738, -95.23922204569], [43.08567003282, -95.23922204569], [43.08567003282, -95.23840700392], [43.0868429738, -95.23840700392], [43.0868429738, -95.23922204569]]}, {"id": "-11", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 92"}, "coords": [[43.0574069778, -95.33086527549], [43.05652262502, -95.33086527549], [43.05652262502, -95.33005023373], [43.0574069778, -95.33005023373], [43.0574069778, -95.33086527549]]}, {"id": "-12", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 93"}, "coords": [[43.05452109584, -95.29807912], [43.05219380208, -95.29807912], [43.05219380208, -95.29805410608], [43.05452109584, -95.29805410608], [43.05452109584, -95.29807912]]}, {"id": "-13", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 94"}, "coords": [[43.05221239027, -95.29886914784], [43.05017368471, -95.29886914784], [43.05017368471, -95.29884413392], [43.05221239027, -95.29884413392], [43.05221239027, -95.29886914784]]}, {"id": "-14", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 95"}, "coords": [[43.02912533459, -95.29768410608], [43.0288181582, -95.29768410608], [43.0288181582, -95.29607903647], [43.02912533459, -95.29607903647], [43.02912533459, -95.29768410608]]}, {"id": "-15", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 96"}, "coords": [[43.10184956, -95.33402538686], [43.10125379541, -95.33402538686], [43.10125379541, -95.3332103451], [43.10184956, -95.3332103451], [43.10184956, -95.33402538686]]}, {"id": "-16", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 97"}, "coords": [[43.10184956, -95.25502260255], [43.10125379541, -95.25502260255], [43.10125379541, -95.25420756078], [43.10184956, -95.25420756078], [43.10184956, -95.25502260255]]}, {"id": "-17", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 98"}, "coords": [[43.0946348551, -95.29096886941], [43.09403909051, -95.29096886941], [43.09403909051, -95.29015382765], [43.0946348551, -95.29015382765], [43.0946348551, -95.29096886941]]}, {"id": "-18", "tags": {"landuse": "farmland", "name": "Campo de Cultivo 99"}, "coords": [[43.05654121322, -95.29570903647], [43.05623403682, -95.29570903647], [43.05623403682, -95.29449898078], [43.05654121322, -95.29449898078], [43.05654121322, -95.29570903647]]}];
+        
+        let container, scene, camera, renderer, controls;
+        let terrainGeom, terrainMesh, terrainMaterial;
+        let heightData = null; // Float32Array storing raw elevations in meters
+        let heightWidth = 0, heightHeight = 0;
+        
+        let currentRes = 512;
+        let renderMode = 'texture'; // 'texture', 'elevation', 'wireframe'
+        let verticalExaggeration = 1.5;
+        
+        // Scene objects
+        let sunLight, ambientLight;
+        let playableBox;
+        let raycaster, mouse;
+        
+        // Textures
+        let colorTexture, heightmapImage;
+
+        // Initialize App
+        window.onload = function() {
+            init();
+        };
+
+        function init() {
+            container = document.getElementById('canvas-container');
+            
+            // Set up Scene, Camera, Renderer
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0d0e12);
+            scene.fog = new THREE.FogExp2(0x0d0e12, 0.0001);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 40000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Orbit Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below ground
+            controls.minDistance = 50;
+            controls.maxDistance = 25000;
+            
+            // Default camera view
+            resetCamera();
+
+            // Lighting
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 100;
+            sunLight.shadow.camera.far = 30000;
+            const d = 8000;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            scene.add(sunLight);
+            
+            updateSunPosition(135, 45);
+
+            // Setup Raycasting
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Load assets
+            loadAssets();
+
+            // Resize handler
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Mouse move for terrain inspection
+            window.addEventListener('mousemove', onMouseMove, false);
+            
+            // Start Loop
+            animate();
+        }
+
+        function resetCamera() {
+            camera.position.set(0, 5000, 9000);
+            controls.target.set(0, 100, 0);
+            controls.update();
+        }
+
+        function updateSunPosition(angleDeg, altitudeDeg) {
+            const angleRad = (angleDeg * Math.PI) / 180;
+            const altRad = (altitudeDeg * Math.PI) / 180;
+            
+            const r = 10000;
+            const y = r * Math.sin(altRad);
+            const x = r * Math.cos(altRad) * Math.cos(angleRad);
+            const z = r * Math.cos(altRad) * Math.sin(angleRad);
+            
+            sunLight.position.set(x, y, z);
+        }
+
+        function loadAssets() {
+            const loadingProgress = document.getElementById('loading-progress');
+            
+            // Load visual texture & RGB Heightmap
+            const textureLoader = new THREE.TextureLoader();
+            
+            loadingProgress.innerText = "Cargando Textura del Mapa...";
+            
+            const cb = '?t=' + Date.now();
+            
+            textureLoader.load('dem_1024_texture.png' + cb, function(tex) {
+                colorTexture = tex;
+                colorTexture.wrapS = THREE.ClampToEdgeWrapping;
+                colorTexture.wrapT = THREE.ClampToEdgeWrapping;
+                
+                loadingProgress.innerText = "Cargando Datos de Elevación (16-bit)...";
+                
+                const img = new Image();
+                img.src = 'dem_1024_rgb16.png' + cb;
+                img.onload = function() {
+                    heightmapImage = img;
+                    
+                    // Parse RGB image to heights
+                    parseHeightmap(img);
+                    
+                    // Build terrain mesh
+                    buildTerrainMesh(currentRes);
+                    
+                    // Build auxiliary lines/guides
+                    buildGuides();
+                    
+                    // Build OSM overlays
+                    buildOsmOverlays();
+                    
+                    // Remove loading overlay
+                    const loader = document.getElementById('loading-overlay');
+                    loader.style.opacity = 0;
+                    setTimeout(() => loader.style.display = 'none', 500);
+                };
+            }, undefined, function(err) {
+                console.error("Error loading terrain texture", err);
+                loadingProgress.innerText = "Error al cargar texturas. Iniciando con colores planos...";
+                const img = new Image();
+                img.src = 'dem_1024_rgb16.png' + cb;
+                img.onload = function() {
+                    heightmapImage = img;
+                    parseHeightmap(img);
+                    buildTerrainMesh(currentRes);
+                    buildGuides();
+                    buildOsmOverlays();
+                    document.getElementById('loading-overlay').style.display = 'none';
+                };
+            });
+        }
+
+        function parseHeightmap(img) {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            
+            const imgData = ctx.getImageData(0, 0, img.width, img.height);
+            const data = imgData.data;
+            
+            heightWidth = img.width;
+            heightHeight = img.height;
+            heightData = new Float32Array(heightWidth * heightHeight);
+            
+            for (let i = 0; i < heightData.length; i++) {
+                const r = data[i * 4];
+                const g = data[i * 4 + 1];
+                // Decode 16-bit value (in cm) and convert to meters
+                const rawHeight = r + g * 256;
+                heightData[i] = rawHeight / 100.0;
+            }
+        }
+
+        function getInterpolatedHeight(u, v) {
+            if (!heightData) return 0;
+            
+            const px = u * (heightWidth - 1);
+            const py = v * (heightHeight - 1);
+            
+            const x0 = Math.floor(px);
+            const y0 = Math.floor(py);
+            const x1 = Math.min(x0 + 1, heightWidth - 1);
+            const y1 = Math.min(y0 + 1, heightHeight - 1);
+            
+            const tx = px - x0;
+            const ty = py - y0;
+            
+            const h00 = heightData[y0 * heightWidth + x0];
+            const h10 = heightData[y0 * heightWidth + x1];
+            const h01 = heightData[y1 * heightWidth + x0];
+            const h11 = heightData[y1 * heightWidth + x1];
+            
+            const h0 = h00 * (1 - tx) + h10 * tx;
+            const h1 = h01 * (1 - tx) + h11 * tx;
+            return h0 * (1 - ty) + h1 * ty;
+        }
+
+        function buildTerrainMesh(res) {
+            if (terrainMesh) {
+                scene.remove(terrainMesh);
+                terrainGeom.dispose();
+            }
+            
+            document.getElementById('mesh-vertices').innerText = (res * res).toLocaleString();
+            
+            terrainGeom = new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE, res - 1, res - 1);
+            
+            const posAttr = terrainGeom.attributes.position;
+            const count = posAttr.count;
+            
+            for (let i = 0; i < count; i++) {
+                const x = posAttr.getX(i);
+                const z = posAttr.getY(i);
+                
+                const u = (x + MAP_SIZE / 2) / MAP_SIZE;
+                const v = 1 - (z + MAP_SIZE / 2) / MAP_SIZE;
+                
+                const height = getInterpolatedHeight(u, v);
+                posAttr.setZ(i, height * verticalExaggeration);
+            }
+            
+            terrainGeom.rotateX(-Math.PI / 2);
+            terrainGeom.computeVertexNormals();
+            
+            if (renderMode === 'texture') {
+                terrainMaterial = new THREE.MeshStandardMaterial({
+                    map: colorTexture,
+                    roughness: 0.85,
+                    metalness: 0.1,
+                    flatShading: false
+                });
+            } else if (renderMode === 'elevation') {
+                buildVertexColors();
+                terrainMaterial = new THREE.MeshStandardMaterial({
+                    vertexColors: true,
+                    roughness: 0.8,
+                    metalness: 0.1
+                });
+            } else {
+                terrainMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x6366f1,
+                    wireframe: true
+                });
+            }
+            
+            terrainMesh = new THREE.Mesh(terrainGeom, terrainMaterial);
+            terrainMesh.receiveShadow = true;
+            terrainMesh.castShadow = true;
+            scene.add(terrainMesh);
+        }
+
+        function buildVertexColors() {
+            const count = terrainGeom.attributes.position.count;
+            const colors = [];
+            
+            const colorRamp = [
+                { h: MIN_HEIGHT, c: new THREE.Color(0x1e4620) },
+                { h: MIN_HEIGHT + (MAX_HEIGHT - MIN_HEIGHT) * 0.05, c: new THREE.Color(0x2d6a2e) },
+                { h: MIN_HEIGHT + (MAX_HEIGHT - MIN_HEIGHT) * 0.15, c: new THREE.Color(0x658c43) },
+                { h: MIN_HEIGHT + (MAX_HEIGHT - MIN_HEIGHT) * 0.40, c: new THREE.Color(0xb8a174) },
+                { h: MIN_HEIGHT + (MAX_HEIGHT - MIN_HEIGHT) * 0.60, c: new THREE.Color(0x8e7355) },
+                { h: MIN_HEIGHT + (MAX_HEIGHT - MIN_HEIGHT) * 0.80, c: new THREE.Color(0x5c5247) },
+                { h: MAX_HEIGHT, c: new THREE.Color(0xffffff) }
+            ];
+            
+            const posAttr = terrainGeom.attributes.position;
+            for (let i = 0; i < count; i++) {
+                const yVal = posAttr.getY(i) / verticalExaggeration;
+                
+                let col = new THREE.Color(0xffffff);
+                if (yVal <= colorRamp[0].h) {
+                    col.copy(colorRamp[0].c);
+                } else if (yVal >= colorRamp[colorRamp.length - 1].h) {
+                    col.copy(colorRamp[colorRamp.length - 1].c);
+                } else {
+                    for (let j = 0; j < colorRamp.length - 1; j++) {
+                        const lower = colorRamp[j];
+                        const upper = colorRamp[j+1];
+                        if (yVal >= lower.h && yVal <= upper.h) {
+                            const t = (yVal - lower.h) / (upper.h - lower.h);
+                            col.copy(lower.c).lerp(upper.c, t);
+                            break;
+                        }
+                    }
+                }
+                colors.push(col.r, col.g, col.b);
+            }
+            
+            terrainGeom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        }
+
+        function buildGuides() {
+            const playMin = -PLAYABLE_SIZE / 2;
+            const playMax = PLAYABLE_SIZE / 2;
+            
+            const boxGeom = new THREE.BufferGeometry();
+            const yMin = MIN_HEIGHT * verticalExaggeration;
+            const yMax = MAX_HEIGHT * verticalExaggeration;
+            
+            const vertices = [
+                // Floor
+                playMin, yMin, playMin,  playMax, yMin, playMin,
+                playMax, yMin, playMin,  playMax, yMin, playMax,
+                playMax, yMin, playMax,  playMin, yMin, playMax,
+                playMin, yMin, playMax,  playMin, yMin, playMin,
+                // Ceiling
+                playMin, yMax, playMin,  playMax, yMax, playMin,
+                playMax, yMax, playMin,  playMax, yMax, playMax,
+                playMax, yMax, playMax,  playMin, yMax, playMax,
+                playMin, yMax, playMax,  playMin, yMax, playMin,
+                // Pillars
+                playMin, yMin, playMin,  playMin, yMax, playMin,
+                playMax, yMin, playMin,  playMax, yMax, playMin,
+                playMax, yMin, playMax,  playMax, yMax, playMax,
+                playMin, yMin, playMax,  playMin, yMax, playMax,
+            ];
+            boxGeom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            const boxMat = new THREE.LineBasicMaterial({ 
+                color: 0x4f46e5, 
+                linewidth: 2, 
+                transparent: true,
+                opacity: 0.8
+            });
+            playableBox = new THREE.LineSegments(boxGeom, boxMat);
+            playableBox.visible = false;
+            scene.add(playableBox);
+        }
+
+        function updateExaggeration(val) {
+            verticalExaggeration = parseFloat(val);
+            document.getElementById('exaggeration-val').innerText = val + 'x';
+            
+            if (heightData) {
+                buildTerrainMesh(currentRes);
+                
+                const wasPlayableVisible = playableBox ? playableBox.visible : false;
+                if (playableBox) {
+                    scene.remove(playableBox);
+                }
+                buildGuides();
+                if (playableBox) {
+                    playableBox.visible = wasPlayableVisible;
+                }
+                
+                // Rebuild OSM overlays
+                buildOsmOverlays();
+            }
+        }
+
+        function setRenderMode(mode) {
+            renderMode = mode;
+            
+            const buttons = document.querySelectorAll('#control-panel .control-row:nth-child(1) .btn-toggle');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (mode === 'texture') buttons[0].classList.add('active');
+            if (mode === 'elevation') buttons[1].classList.add('active');
+            if (mode === 'wireframe') buttons[2].classList.add('active');
+            
+            if (heightData) {
+                buildTerrainMesh(currentRes);
+            }
+        }
+
+        function changeMeshResolution(res) {
+            currentRes = res;
+            
+            const buttons = document.querySelectorAll('#control-panel .control-row:nth-child(2) .btn-toggle');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (res === 256) buttons[0].classList.add('active');
+            if (res === 512) buttons[1].classList.add('active');
+            if (res === 1024) buttons[2].classList.add('active');
+            
+            if (heightData) {
+                const overlay = document.getElementById('loading-overlay');
+                const pText = document.getElementById('loading-progress');
+                document.getElementById('loading-text').innerText = "RECONSTRUYENDO MALLA 3D...";
+                pText.innerText = "Calculando vértices a " + res + "²...";
+                overlay.style.display = 'flex';
+                overlay.style.opacity = 1;
+                
+                setTimeout(() => {
+                    buildTerrainMesh(res);
+                    overlay.style.opacity = 0;
+                    setTimeout(() => overlay.style.display = 'none', 300);
+                }, 50);
+            }
+        }
+
+        function togglePlayableBox(visible) {
+            if (playableBox) playableBox.visible = visible;
+        }
+
+        let osmGroup = null;
+        
+        function buildOsmOverlays() {
+            if (osmGroup) {
+                scene.remove(osmGroup);
+            }
+            osmGroup = new THREE.Group();
+            
+            if (!OSM_DATA || OSM_DATA.length === 0) return;
+            
+            OSM_DATA.forEach(way => {
+                const coords = way.coords;
+                if (!coords || coords.length < 2) return;
+                
+                let color = 0xffffff;
+                
+                // Determine color based on tags
+                if (way.tags.natural === 'wood' || way.tags.landuse === 'forest') {
+                    color = 0x22c55e; // Green for forest
+                } else if (way.tags.landuse === 'farmyard') {
+                    color = 0xdcb890; // Sand/brown for farmyard
+                } else if (way.tags.landuse === 'farmland') {
+                    color = 0x86efac; // Light green for crop fields
+                } else if (way.tags.highway === 'track') {
+                    color = 0xb45309; // Brown/earth for tracks
+                } else if (way.tags.highway) {
+                    color = 0x9ca3af; // Gray for road
+                }
+                
+                const points = [];
+                coords.forEach(coord => {
+                    const lat = coord[0];
+                    const lon = coord[1];
+                    
+                    const u_play = (lon - MIN_LON) / (MAX_LON - MIN_LON);
+                    const v_play = (MAX_LAT - lat) / (MAX_LAT - MIN_LAT);
+                    
+                    const x = (u_play - 0.5) * PLAYABLE_SIZE;
+                    const z = (0.5 - v_play) * PLAYABLE_SIZE;
+                    
+                    const u_map = (x + MAP_SIZE / 2) / MAP_SIZE;
+                    const v_map = 1 - (z + MAP_SIZE / 2) / MAP_SIZE;
+                    const height = getInterpolatedHeight(u_map, v_map);
+                    
+                    // 3.0 meters above ground to avoid z-fighting
+                    points.push(new THREE.Vector3(x, height * verticalExaggeration + 3.0, z));
+                });
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({
+                    color: color,
+                    linewidth: 3,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const isClosed = coords[0][0] === coords[coords.length - 1][0] && coords[0][1] === coords[coords.length - 1][1];
+                const line = isClosed ? new THREE.LineLoop(geometry, material) : new THREE.Line(geometry, material);
+                osmGroup.add(line);
+            });
+            
+            const toggleElement = document.getElementById('toggle-osm');
+            if (toggleElement) {
+                osmGroup.visible = toggleElement.checked;
+            } else {
+                osmGroup.visible = true;
+            }
+            
+            scene.add(osmGroup);
+        }
+        
+        function toggleOsmOverlay(visible) {
+            if (osmGroup) osmGroup.visible = visible;
+        }
+
+        function updateSunAngle(angle) {
+            document.getElementById('sun-angle-val').innerText = angle + '°';
+            const alt = document.getElementById('sun-alt').value;
+            updateSunPosition(parseInt(angle), parseInt(alt));
+        }
+
+        function updateSunAltitude(alt) {
+            document.getElementById('sun-alt-val').innerText = alt + '°';
+            const angle = document.getElementById('sun-angle').value;
+            updateSunPosition(parseInt(angle), parseInt(alt));
+        }
+
+        function toggleHelp(show) {
+            const modal = document.getElementById('help-modal');
+            if (show) {
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function checkTerrainIntersection() {
+            if (!terrainMesh || !heightData) return;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(terrainMesh);
+            
+            const probePanel = document.getElementById('probe-panel');
+            
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                const x = point.x;
+                const z = point.z;
+                
+                if (Math.abs(x) <= MAP_SIZE/2 && Math.abs(z) <= MAP_SIZE/2) {
+                    probePanel.style.display = 'block';
+                    const realY = point.y / verticalExaggeration;
+                    
+                    document.getElementById('probe-coords').innerText = `X: ${Math.round(x)}m | Z: ${Math.round(z)}m`;
+                    document.getElementById('probe-height').innerText = `${realY.toFixed(2)}m`;
+                    
+                    const inPlayable = Math.abs(x) <= PLAYABLE_SIZE/2 && Math.abs(z) <= PLAYABLE_SIZE/2;
+                    const zoneLabel = document.getElementById('probe-zone');
+                    
+                    // Lake checks (moved 600m inside, so centers are at -3406 and 3406)
+                    const dxLakeTL = x - (-3406);
+                    const dzLakeTL = z - (-3406);
+                    const distLakeTL = Math.max(Math.abs(dxLakeTL), Math.abs(dzLakeTL));
+                    
+                    const dxLakeBR = x - 3406;
+                    const dzLakeBR = z - 3406;
+                    const distLakeBR = Math.max(Math.abs(dxLakeBR), Math.abs(dzLakeBR));
+                    
+                    // Canal checks (pointing OUTWARD, extended to map edges)
+                    const isCanalTL_H = (x >= -6144 && x <= -3406 && z >= -3416 && z <= -3396);
+                    const isCanalTL_V = (x >= -3416 && x <= -3396 && z >= -6144 && z <= -3406);
+                    const isCanalBR_H = (x >= 3406 && x <= 6144 && z >= 3396 && z <= 3416);
+                    const isCanalBR_V = (x >= 3396 && x <= 3416 && z >= 3406 && z <= 6144);
+                    
+                    if (distLakeTL <= 90 || distLakeBR <= 90) {
+                        zoneLabel.innerText = "Lago (Profundidad 25m)";
+                        zoneLabel.style.color = "#3b82f6";
+                    } else if (isCanalTL_H || isCanalTL_V || isCanalBR_H || isCanalBR_V) {
+                        zoneLabel.innerText = "Canal Exterior (Profundidad 15m)";
+                        zoneLabel.style.color = "#60a5fa";
+                    } else if (inPlayable) {
+                        if (realY > 46.0) {
+                            zoneLabel.innerText = "Área Montañosa";
+                            zoneLabel.style.color = "#eab308";
+                        } else if (Math.abs(realY - 35.0) < 0.01) {
+                            zoneLabel.innerText = "Área Plana (Zona Roja/Camino)";
+                            zoneLabel.style.color = "#f472b6";
+                        } else {
+                            zoneLabel.innerText = "Área Jugable";
+                            zoneLabel.style.color = "#10b981";
+                        }
+                    } else {
+                        zoneLabel.innerText = "Fondo No Jugable";
+                        zoneLabel.style.color = "#f43f5e";
+                    }
+                } else {
+                    probePanel.style.display = 'none';
+                }
+            } else {
+                probePanel.style.display = 'none';
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            checkTerrainIntersection();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
